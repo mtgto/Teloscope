@@ -1506,11 +1506,9 @@ struct GanttChartView: View {
                 GeometryReader { geo in
                     Rectangle().fill(.clear).contentShape(Rectangle())
                         .onTapGesture { location in
-                            let x = location.x - geo[proxy.plotFrame!].minX
                             let y = location.y - geo[proxy.plotFrame!].minY
                             if let label = proxy.value(atY: y, as: String.self) {
                                 selectedSpan = spans.first { spanLabel($0) == label }
-                                popoverAnchor = location
                             }
                         }
                 }
