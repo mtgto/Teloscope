@@ -7,7 +7,13 @@ import SwiftData
 struct TeloscopeApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            ResourceSpans.self,
+            ScopeSpans.self,
+            Span.self,
+            SpanAttribute.self,
+            ResourceAttribute.self,
+            ResourceMetrics.self,
+            ResourceLogs.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
