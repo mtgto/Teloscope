@@ -7,6 +7,7 @@ import Observation
 @Observable
 final class OTLPServer: @unchecked Sendable {
     private(set) var isRunning = false
+    private(set) var boundPort: Int?
     var lastError: String?
 
     private var group: MultiThreadedEventLoopGroup?
@@ -28,6 +29,9 @@ final class OTLPServer: @unchecked Sendable {
         do {
             let channel = try await bootstrap.bind(host: "127.0.0.1", port: port).get()
             self.channel = channel
+            if let addr = channel.localAddress, let port = addr.port {
+                await MainActor.run { self.boundPort = port }
+            }
             await MainActor.run {
                 self.isRunning = true
                 self.lastError = nil
@@ -46,6 +50,7 @@ final class OTLPServer: @unchecked Sendable {
         group = nil
         await MainActor.run {
             isRunning = false
+            boundPort = nil
         }
     }
 }

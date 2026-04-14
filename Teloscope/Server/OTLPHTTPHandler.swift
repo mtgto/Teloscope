@@ -29,6 +29,10 @@ final class OTLPHTTPHandler: ChannelInboundHandler, @unchecked Sendable {
     }
 
     private func handle(context: ChannelHandlerContext, head: HTTPRequestHead, body: ByteBuffer) {
+        guard head.method == .POST else {
+            respond(context: context, status: .methodNotAllowed)
+            return
+        }
         let bytes = Data(body.readableBytesView)
         switch head.uri {
         case "/v1/traces":

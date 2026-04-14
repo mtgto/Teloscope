@@ -7,20 +7,23 @@ struct OTLPServerTests {
     @Test func serverStartsAndStops() async throws {
         let server = OTLPServer()
         #expect(!server.isRunning)
-        try await server.start(port: 14318) { _ in }
+        try await server.start(port: 0) { _ in }
         #expect(server.isRunning)
+        #expect(server.boundPort != nil)
         try await server.stop()
         #expect(!server.isRunning)
+        #expect(server.boundPort == nil)
     }
 
     @Test func serverReceivesTracesRequest() async throws {
         let server = OTLPServer()
         var receivedRequests: [OTLPRequest] = []
-        try await server.start(port: 14319) { request in
+        try await server.start(port: 0) { request in
             receivedRequests.append(request)
         }
+        let port = try #require(server.boundPort)
 
-        var req = URLRequest(url: URL(string: "http://127.0.0.1:14319/v1/traces")!)
+        var req = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/v1/traces")!)
         req.httpMethod = "POST"
         req.httpBody = Data([0x01, 0x02])
         req.setValue("application/x-protobuf", forHTTPHeaderField: "Content-Type")
@@ -39,9 +42,10 @@ struct OTLPServerTests {
 
     @Test func serverReturns404ForUnknownPath() async throws {
         let server = OTLPServer()
-        try await server.start(port: 14320) { _ in }
+        try await server.start(port: 0) { _ in }
+        let port = try #require(server.boundPort)
 
-        var req = URLRequest(url: URL(string: "http://127.0.0.1:14320/v1/unknown")!)
+        var req = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/v1/unknown")!)
         req.httpMethod = "POST"
         req.httpBody = Data()
         let (_, response) = try await URLSession.shared.data(for: req)
