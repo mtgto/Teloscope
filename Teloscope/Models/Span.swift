@@ -10,7 +10,7 @@ enum AttributeValue: Codable, Equatable {
     case stringArray([String])
 }
 
-enum SpanKind: Int, Codable {
+enum OTLPSpanKind: Int, Codable {
     case unspecified = 0
     case `internal` = 1
     case server = 2
@@ -19,7 +19,7 @@ enum SpanKind: Int, Codable {
     case consumer = 5
 }
 
-enum SpanStatus: Int, Codable {
+enum OTLPSpanStatus: Int, Codable {
     case unset = 0
     case ok = 1
     case error = 2
@@ -43,7 +43,7 @@ final class SpanAttribute {
 }
 
 @Model
-final class Span {
+final class OTLPSpan {
     var traceId: String
     var spanId: String
     var parentSpanId: String?
@@ -55,18 +55,18 @@ final class Span {
     @Relationship(deleteRule: .cascade)
     var attributes: [SpanAttribute]
 
-    var kind: SpanKind { SpanKind(rawValue: kindRaw) ?? .unspecified }
-    var status: SpanStatus { SpanStatus(rawValue: statusRaw) ?? .unset }
+    var kind: OTLPSpanKind { OTLPSpanKind(rawValue: kindRaw) ?? .unspecified }
+    var status: OTLPSpanStatus { OTLPSpanStatus(rawValue: statusRaw) ?? .unset }
 
     init(
         traceId: String,
         spanId: String,
         parentSpanId: String? = nil,
         name: String,
-        kind: SpanKind = .unspecified,
+        kind: OTLPSpanKind = .unspecified,
         startTime: Date,
         endTime: Date,
-        status: SpanStatus = .unset,
+        status: OTLPSpanStatus = .unset,
         attributes: [SpanAttribute] = []
     ) {
         self.traceId = traceId

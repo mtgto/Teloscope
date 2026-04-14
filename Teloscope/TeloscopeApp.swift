@@ -9,7 +9,7 @@ struct TeloscopeApp: App {
         let schema = Schema([
             ResourceSpans.self,
             ScopeSpans.self,
-            Span.self,
+            OTLPSpan.self,
             SpanAttribute.self,
             ResourceAttribute.self,
             ResourceMetrics.self,
