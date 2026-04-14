@@ -6,6 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		CEA945472F8E5AD60006E40E /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = CEA945422F8E5AD60006E40E /* NIO */; };
+		CEA945482F8E5AD60006E40E /* NIOCore in Frameworks */ = {isa = PBXBuildFile; productRef = CEA945432F8E5AD60006E40E /* NIOCore */; };
+		CEA945492F8E5AD60006E40E /* NIOPosix in Frameworks */ = {isa = PBXBuildFile; productRef = CEA945442F8E5AD60006E40E /* NIOPosix */; };
+		CEA9454A2F8E5AD60006E40E /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = CEA945452F8E5AD60006E40E /* NIOHTTP1 */; };
+		CEA9454B2F8E5AD60006E40E /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = CEA945462F8E5AD60006E40E /* SwiftProtobuf */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		CEA945212F8E5AD60006E40E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -39,6 +47,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CEA945472F8E5AD60006E40E /* NIO in Frameworks */,
+				CEA945482F8E5AD60006E40E /* NIOCore in Frameworks */,
+				CEA945492F8E5AD60006E40E /* NIOPosix in Frameworks */,
+				CEA9454A2F8E5AD60006E40E /* NIOHTTP1 in Frameworks */,
+				CEA9454B2F8E5AD60006E40E /* SwiftProtobuf in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -90,6 +103,11 @@
 			);
 			name = Teloscope;
 			packageProductDependencies = (
+				CEA945422F8E5AD60006E40E /* NIO */,
+				CEA945432F8E5AD60006E40E /* NIOCore */,
+				CEA945442F8E5AD60006E40E /* NIOPosix */,
+				CEA945452F8E5AD60006E40E /* NIOHTTP1 */,
+				CEA945462F8E5AD60006E40E /* SwiftProtobuf */,
 			);
 			productName = Teloscope;
 			productReference = CEA945112F8E5AD20006E40E /* Teloscope.app */;
@@ -146,6 +164,10 @@
 			);
 			mainGroup = CEA945082F8E5AD20006E40E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */,
+				CEA945412F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-protobuf" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CEA945122F8E5AD20006E40E /* Products */;
 			projectDirPath = "";
@@ -198,6 +220,53 @@
 			targetProxy = CEA945212F8E5AD60006E40E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.65.0;
+			};
+		};
+		CEA945412F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-protobuf" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-protobuf.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.28.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CEA945422F8E5AD60006E40E /* NIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIO;
+		};
+		CEA945432F8E5AD60006E40E /* NIOCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOCore;
+		};
+		CEA945442F8E5AD60006E40E /* NIOPosix */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOPosix;
+		};
+		CEA945452F8E5AD60006E40E /* NIOHTTP1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOHTTP1;
+		};
+		CEA945462F8E5AD60006E40E /* SwiftProtobuf */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CEA945412F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-protobuf" */;
+			productName = SwiftProtobuf;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		CEA945322F8E5AD60006E40E /* Debug */ = {
