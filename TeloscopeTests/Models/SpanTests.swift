@@ -8,7 +8,7 @@ struct SpanTests {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
             for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
-            ResourceMetrics.self, ResourceLogs.self,
+            ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self,
             configurations: config
         )
         let context = ModelContext(container)
