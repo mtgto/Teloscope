@@ -1,9 +1,4 @@
-//
-//  TeloscopeApp.swift
-//  Teloscope
-//
-//  Created by mtgto on 2026/04/14.
-//
+// SPDX-License-Identifier: MIT
 
 import SwiftUI
 import SwiftData

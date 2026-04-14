@@ -1,5 +1,5 @@
 xcuserdata/
-.build/
+/DerivedData/
 /.claude/
 .worktrees/
 .superpowers/

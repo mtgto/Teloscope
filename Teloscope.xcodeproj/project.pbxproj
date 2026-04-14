@@ -14,19 +14,11 @@
 			remoteGlobalIDString = CEA945102F8E5AD20006E40E;
 			remoteInfo = Teloscope;
 		};
-		CEA9452B2F8E5AD60006E40E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = CEA945092F8E5AD20006E40E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = CEA945102F8E5AD20006E40E;
-			remoteInfo = Teloscope;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		CEA945112F8E5AD20006E40E /* Teloscope.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Teloscope.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEA945202F8E5AD60006E40E /* TeloscopeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TeloscopeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		CEA9452A2F8E5AD60006E40E /* TeloscopeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TeloscopeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -38,11 +30,6 @@
 		CEA945232F8E5AD60006E40E /* TeloscopeTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = TeloscopeTests;
-			sourceTree = "<group>";
-		};
-		CEA9452D2F8E5AD60006E40E /* TeloscopeUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = TeloscopeUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -62,13 +49,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		CEA945272F8E5AD60006E40E /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -77,7 +57,6 @@
 			children = (
 				CEA945132F8E5AD20006E40E /* Teloscope */,
 				CEA945232F8E5AD60006E40E /* TeloscopeTests */,
-				CEA9452D2F8E5AD60006E40E /* TeloscopeUITests */,
 				CEA945122F8E5AD20006E40E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -87,7 +66,6 @@
 			children = (
 				CEA945112F8E5AD20006E40E /* Teloscope.app */,
 				CEA945202F8E5AD60006E40E /* TeloscopeTests.xctest */,
-				CEA9452A2F8E5AD60006E40E /* TeloscopeUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -140,29 +118,6 @@
 			productReference = CEA945202F8E5AD60006E40E /* TeloscopeTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		CEA945292F8E5AD60006E40E /* TeloscopeUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = CEA9453A2F8E5AD60006E40E /* Build configuration list for PBXNativeTarget "TeloscopeUITests" */;
-			buildPhases = (
-				CEA945262F8E5AD60006E40E /* Sources */,
-				CEA945272F8E5AD60006E40E /* Frameworks */,
-				CEA945282F8E5AD60006E40E /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				CEA9452C2F8E5AD60006E40E /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				CEA9452D2F8E5AD60006E40E /* TeloscopeUITests */,
-			);
-			name = TeloscopeUITests;
-			packageProductDependencies = (
-			);
-			productName = TeloscopeUITests;
-			productReference = CEA9452A2F8E5AD60006E40E /* TeloscopeUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -177,10 +132,6 @@
 						CreatedOnToolsVersion = 26.4;
 					};
 					CEA9451F2F8E5AD60006E40E = {
-						CreatedOnToolsVersion = 26.4;
-						TestTargetID = CEA945102F8E5AD20006E40E;
-					};
-					CEA945292F8E5AD60006E40E = {
 						CreatedOnToolsVersion = 26.4;
 						TestTargetID = CEA945102F8E5AD20006E40E;
 					};
@@ -202,7 +153,6 @@
 			targets = (
 				CEA945102F8E5AD20006E40E /* Teloscope */,
 				CEA9451F2F8E5AD60006E40E /* TeloscopeTests */,
-				CEA945292F8E5AD60006E40E /* TeloscopeUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -216,13 +166,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		CEA9451E2F8E5AD60006E40E /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		CEA945282F8E5AD60006E40E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -246,13 +189,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		CEA945262F8E5AD60006E40E /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -260,11 +196,6 @@
 			isa = PBXTargetDependency;
 			target = CEA945102F8E5AD20006E40E /* Teloscope */;
 			targetProxy = CEA945212F8E5AD60006E40E /* PBXContainerItemProxy */;
-		};
-		CEA9452C2F8E5AD60006E40E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = CEA945102F8E5AD20006E40E /* Teloscope */;
-			targetProxy = CEA9452B2F8E5AD60006E40E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -328,6 +259,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -384,6 +316,7 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
 			name = Release;
 		};
@@ -396,15 +329,25 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = net.mtgto.Teloscope;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -426,15 +369,25 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = net.mtgto.Teloscope;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -487,42 +440,6 @@
 			};
 			name = Release;
 		};
-		CEA9453B2F8E5AD60006E40E /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mtgto.TeloscopeUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = Teloscope;
-			};
-			name = Debug;
-		};
-		CEA9453C2F8E5AD60006E40E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.mtgto.TeloscopeUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = Teloscope;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -549,15 +466,6 @@
 			buildConfigurations = (
 				CEA945382F8E5AD60006E40E /* Debug */,
 				CEA945392F8E5AD60006E40E /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		CEA9453A2F8E5AD60006E40E /* Build configuration list for PBXNativeTarget "TeloscopeUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				CEA9453B2F8E5AD60006E40E /* Debug */,
-				CEA9453C2F8E5AD60006E40E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

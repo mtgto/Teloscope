@@ -1,0 +1,10 @@
+root = true
+
+[*.swift]
+indent_style = space
+tab_width = 4
+indent_size = 4
+end_of_line = lf
+insert_final_newline = true
+max_line_length = 150
+trim_trailing_whitespace = true

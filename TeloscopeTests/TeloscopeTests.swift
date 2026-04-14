@@ -1,9 +1,4 @@
-//
-//  TeloscopeTests.swift
-//  TeloscopeTests
-//
-//  Created by mtgto on 2026/04/14.
-//
+// SPDX-License-Identifier: MIT
 
 import Testing
 @testable import Teloscope
