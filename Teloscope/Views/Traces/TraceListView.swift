@@ -83,10 +83,19 @@ struct TraceListView: View {
         VSplitView {
             sessionList
                 .frame(minHeight: 150)
-            if selection != nil {
+            switch selection {
+            case .session:
+                VStack(spacing: 0) {
+                    SessionSummaryView(spans: selectedSpans)
+                        .background(.background)
+                    Divider()
+                    GanttChartView(spans: selectedSpans)
+                }
+                .frame(minHeight: 200)
+            case .trace:
                 GanttChartView(spans: selectedSpans)
                     .frame(minHeight: 200)
-            } else {
+            case nil:
                 ContentUnavailableView(
                     "Select a Trace",
                     systemImage: "chart.bar.doc.horizontal",
