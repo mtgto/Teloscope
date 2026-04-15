@@ -73,10 +73,26 @@ struct GanttChartView: View {
     }
 
     private func barColor(for span: OTLPSpan) -> Color {
-        switch span.status {
-        case .error: return .red.opacity(0.8)
-        case .ok: return .blue.opacity(0.7)
-        case .unset: return .gray.opacity(0.6)
+        // Error status always overrides name-based color
+        if span.status == .error { return .red.opacity(0.8) }
+        return spanNameColor(span.name).opacity(0.75)
+    }
+
+    private func spanNameColor(_ name: String) -> Color {
+        switch true {
+        case name.hasPrefix("claude_code.llm_request"):
+            return .orange
+        case name.hasPrefix("claude_code.tool.blocked_on_user"):
+            return .purple
+        case name.hasPrefix("claude_code.tool.execution"):
+            return .teal
+        case name.hasPrefix("claude_code.tool"):
+            return .cyan
+        default:
+            // Hash the name to a stable color from a palette for unknown span types
+            let palette: [Color] = [.blue, .green, .yellow, .pink, .indigo, .mint]
+            let index = abs(name.hashValue) % palette.count
+            return palette[index]
         }
     }
 }
