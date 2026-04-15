@@ -1,5 +1,6 @@
 xcuserdata/
 /DerivedData/
+.derived-data-log-*
 /.claude/
 .worktrees/
 .superpowers/
