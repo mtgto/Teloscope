@@ -59,7 +59,7 @@ struct GanttChartView: View {
                         }
                 }
             }
-            .frame(height: CGFloat(spans.count) * 28 + 60)
+            .frame(height: CGFloat(Set(spans.map { spanLabel($0) }).count) * 28 + 60)
             .padding()
         }
         .popover(item: $selectedSpan) { span in
