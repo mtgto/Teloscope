@@ -221,53 +221,6 @@
 		};
 /* End PBXTargetDependency section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-nio.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.65.0;
-			};
-		};
-		CEA945412F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-protobuf" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-protobuf.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.28.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		CEA945422F8E5AD60006E40E /* NIO */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIO;
-		};
-		CEA945432F8E5AD60006E40E /* NIOCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIOCore;
-		};
-		CEA945442F8E5AD60006E40E /* NIOPosix */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIOPosix;
-		};
-		CEA945452F8E5AD60006E40E /* NIOHTTP1 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIOHTTP1;
-		};
-		CEA945462F8E5AD60006E40E /* SwiftProtobuf */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CEA945412F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-protobuf" */;
-			productName = SwiftProtobuf;
-		};
-/* End XCSwiftPackageProductDependency section */
-
 /* Begin XCBuildConfiguration section */
 		CEA945322F8E5AD60006E40E /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -422,7 +375,6 @@
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -462,7 +414,6 @@
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -540,6 +491,53 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.65.0;
+			};
+		};
+		CEA945412F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-protobuf" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-protobuf.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.28.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CEA945422F8E5AD60006E40E /* NIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIO;
+		};
+		CEA945432F8E5AD60006E40E /* NIOCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOCore;
+		};
+		CEA945442F8E5AD60006E40E /* NIOPosix */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOPosix;
+		};
+		CEA945452F8E5AD60006E40E /* NIOHTTP1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CEA945402F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOHTTP1;
+		};
+		CEA945462F8E5AD60006E40E /* SwiftProtobuf */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CEA945412F8E5AD60006E40E /* XCRemoteSwiftPackageReference "swift-protobuf" */;
+			productName = SwiftProtobuf;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = CEA945092F8E5AD20006E40E /* Project object */;
 }

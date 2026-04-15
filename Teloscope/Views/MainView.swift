@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import SwiftUI
+import SwiftData
 
 enum SidebarItem: String, CaseIterable, Identifiable {
     case traces = "Traces"
