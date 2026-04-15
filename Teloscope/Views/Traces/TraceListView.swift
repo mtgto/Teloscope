@@ -18,9 +18,14 @@ struct SessionRow: Identifiable {
     var traceCount: Int { traces.count }
 }
 
+enum TraceSelection: Hashable {
+    case session(String)
+    case trace(String)
+}
+
 struct TraceListView: View {
     @Query(sort: \OTLPSpan.startTime, order: .reverse) private var allSpans: [OTLPSpan]
-    @State private var selectedTraceId: String?
+    @State private var selection: TraceSelection?
     @State private var expandedSessions: Set<String> = []
 
     private var sessions: [SessionRow] {
@@ -50,9 +55,17 @@ struct TraceListView: View {
     }
 
     private var selectedSpans: [OTLPSpan] {
-        guard let traceId = selectedTraceId else { return [] }
-        return allSpans.filter { $0.traceId == traceId }
-            .sorted { $0.startTime < $1.startTime }
+        switch selection {
+        case .session(let sid):
+            let traceIds = Set(sessions.first { $0.id == sid }?.traces.map(\.traceId) ?? [])
+            return allSpans.filter { traceIds.contains($0.traceId) }
+                .sorted { $0.startTime < $1.startTime }
+        case .trace(let traceId):
+            return allSpans.filter { $0.traceId == traceId }
+                .sorted { $0.startTime < $1.startTime }
+        case nil:
+            return []
+        }
     }
 
     private func sessionId(for spans: [OTLPSpan]) -> String {
@@ -70,7 +83,7 @@ struct TraceListView: View {
         VSplitView {
             sessionList
                 .frame(minHeight: 150)
-            if selectedTraceId != nil {
+            if selection != nil {
                 GanttChartView(spans: selectedSpans)
                     .frame(minHeight: 200)
             } else {
@@ -85,7 +98,7 @@ struct TraceListView: View {
     }
 
     private var sessionList: some View {
-        List(selection: $selectedTraceId) {
+        List(selection: $selection) {
             ForEach(sessions) { session in
                 let isExpanded = Binding(
                     get: { expandedSessions.contains(session.id) },
@@ -93,11 +106,12 @@ struct TraceListView: View {
                 )
                 DisclosureGroup(isExpanded: isExpanded) {
                     ForEach(session.traces) { trace in
-                        traceRow(trace).tag(trace.traceId)
+                        traceRow(trace).tag(TraceSelection.trace(trace.traceId))
                     }
                 } label: {
                     sessionHeader(session)
                 }
+                .tag(TraceSelection.session(session.id))
             }
         }
         .listStyle(.sidebar)
