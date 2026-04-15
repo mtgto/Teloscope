@@ -27,7 +27,7 @@ struct TeloscopeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView()
                 .environment(settings)
                 .environment(server)
                 .task {
