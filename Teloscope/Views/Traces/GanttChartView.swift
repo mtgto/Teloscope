@@ -6,32 +6,21 @@ struct GanttChartView: View {
     let spans: [OTLPSpan]
     @State private var selectedSpan: OTLPSpan?
 
-    private var traceStart: Date {
-        spans.map(\.startTime).min() ?? Date()
-    }
-
-    private func msOffset(_ date: Date) -> Double {
-        date.timeIntervalSince(traceStart) * 1000
-    }
-
-    private func indentLevel(for span: OTLPSpan) -> Int {
-        var level = 0
-        var currentId = span.parentSpanId
-        while let parentId = currentId {
-            level += 1
-            currentId = spans.first { $0.spanId == parentId }?.parentSpanId
-            if level > 20 { break }
-        }
-        return level
-    }
-
     var body: some View {
+        // Precompute all span data once per render to avoid O(n²) complexity.
+        // Previously, indentLevel() did an O(n) linear scan per parent hop per span.
+        let traceStart = spans.map(\.startTime).min() ?? Date()
+        let labelMap = buildLabelMap()
+        let uniqueLabelCount = Set(labelMap.values).count
+
         ScrollView(.vertical) {
             Chart(spans, id: \.spanId) { span in
+                let label = labelMap[span.spanId] ?? span.name
                 BarMark(
-                    xStart: .value("Start", msOffset(span.startTime)),
-                    xEnd: .value("End", max(msOffset(span.endTime), msOffset(span.startTime) + 1)),
-                    y: .value("Span", spanLabel(span))
+                    xStart: .value("Start", span.startTime.timeIntervalSince(traceStart) * 1000),
+                    xEnd: .value("End", max(span.endTime.timeIntervalSince(traceStart) * 1000,
+                                           span.startTime.timeIntervalSince(traceStart) * 1000 + 1)),
+                    y: .value("Span", label)
                 )
                 .foregroundStyle(barColor(for: span))
                 .cornerRadius(2)
@@ -54,12 +43,12 @@ struct GanttChartView: View {
                         .onTapGesture { location in
                             let y = location.y - geo[proxy.plotFrame!].minY
                             if let label = proxy.value(atY: y, as: String.self) {
-                                selectedSpan = spans.first { spanLabel($0) == label }
+                                selectedSpan = spans.first { (labelMap[$0.spanId] ?? $0.name) == label }
                             }
                         }
                 }
             }
-            .frame(height: CGFloat(Set(spans.map { spanLabel($0) }).count) * 28 + 60)
+            .frame(height: CGFloat(uniqueLabelCount) * 28 + 60)
             .padding()
         }
         .popover(item: $selectedSpan) { span in
@@ -67,9 +56,39 @@ struct GanttChartView: View {
         }
     }
 
-    private func spanLabel(_ span: OTLPSpan) -> String {
-        let indent = String(repeating: "  ", count: indentLevel(for: span))
-        return "\(indent)\(span.name)"
+    // Builds a map of spanId → indented label string in O(n) using memoized recursion.
+    private func buildLabelMap() -> [String: String] {
+        // Map spanId → parentSpanId for spans that have a parent
+        let parentMap: [String: String] = spans.reduce(into: [:]) { dict, span in
+            if let parentId = span.parentSpanId {
+                dict[span.spanId] = parentId
+            }
+        }
+        var indentCache: [String: Int] = [:]
+        return spans.reduce(into: [:]) { dict, span in
+            let level = computeIndentLevel(spanId: span.spanId, parentMap: parentMap, cache: &indentCache)
+            let indent = String(repeating: "  ", count: level)
+            dict[span.spanId] = "\(indent)\(span.name)"
+        }
+    }
+
+    // Computes indent level using memoization. The sentinel value (cache[spanId] = 0 before
+    // recursing) breaks any unexpected cycles in the span parent chain.
+    private func computeIndentLevel(
+        spanId: String,
+        parentMap: [String: String],
+        cache: inout [String: Int]
+    ) -> Int {
+        if let cached = cache[spanId] { return cached }
+        cache[spanId] = 0  // Sentinel: breaks cycles, default root level
+        let level: Int
+        if let parentId = parentMap[spanId] {
+            level = min(computeIndentLevel(spanId: parentId, parentMap: parentMap, cache: &cache) + 1, 20)
+        } else {
+            level = 0
+        }
+        cache[spanId] = level
+        return level
     }
 
     private func barColor(for span: OTLPSpan) -> Color {

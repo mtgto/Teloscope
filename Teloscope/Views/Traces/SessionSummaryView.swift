@@ -96,9 +96,13 @@ struct SessionSummary {
 // MARK: - SessionSummaryView
 
 struct SessionSummaryView: View {
-    let spans: [OTLPSpan]
+    private let spans: [OTLPSpan]
+    private let summary: SessionSummary
 
-    private var summary: SessionSummary { SessionSummary(spans: spans) }
+    init(spans: [OTLPSpan]) {
+        self.spans = spans
+        self.summary = SessionSummary(spans: spans)
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {

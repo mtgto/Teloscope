@@ -27,8 +27,54 @@ struct TraceListView: View {
     @Query(sort: \OTLPSpan.startTime, order: .reverse) private var allSpans: [OTLPSpan]
     @State private var selection: TraceSelection?
     @State private var expandedSessions: Set<String> = []
+    @State private var cachedSessions: [SessionRow] = []
+    @State private var selectedSpans: [OTLPSpan] = []
+    @State private var isLoadingSelection = false
+    @State private var selectionTask: Task<Void, Never>?
 
-    private var sessions: [SessionRow] {
+    var body: some View {
+        VSplitView {
+            sessionList
+                .frame(minHeight: 150)
+            switch selection {
+            case .session:
+                if isLoadingSelection {
+                    ProgressView("Loading...")
+                        .frame(maxWidth: .infinity, minHeight: 200)
+                } else {
+                    VStack(spacing: 0) {
+                        SessionSummaryView(spans: selectedSpans)
+                            .background(.background)
+                        Divider()
+                        GanttChartView(spans: selectedSpans)
+                    }
+                    .frame(minHeight: 200)
+                }
+            case .trace:
+                if isLoadingSelection {
+                    ProgressView("Loading...")
+                        .frame(maxWidth: .infinity, minHeight: 200)
+                } else {
+                    GanttChartView(spans: selectedSpans)
+                        .frame(minHeight: 200)
+                }
+            case nil:
+                ContentUnavailableView(
+                    "Select a Trace",
+                    systemImage: "chart.bar.doc.horizontal",
+                    description: Text("Select a trace from the list above to see the Gantt chart")
+                )
+            }
+        }
+        .navigationTitle("Traces")
+        .onAppear { rebuildSessions() }
+        .onChange(of: allSpans) { rebuildSessions() }
+        .onChange(of: selection) { _, newSelection in
+            updateSelectedSpans(for: newSelection)
+        }
+    }
+
+    private func rebuildSessions() {
         let byTrace = Dictionary(grouping: allSpans, by: \.traceId)
 
         let traceRows: [TraceRow] = byTrace.map { traceId, spans in
@@ -48,23 +94,39 @@ struct TraceListView: View {
 
         let bySession = Dictionary(grouping: traceRows) { traceSessionMap[$0.traceId] ?? "unknown" }
 
-        return bySession.map { sid, rows in
+        cachedSessions = bySession.map { sid, rows in
             SessionRow(id: sid, traces: rows.sorted { $0.startTime > $1.startTime })
         }
         .sorted { $0.startTime > $1.startTime }
     }
 
-    private var selectedSpans: [OTLPSpan] {
-        switch selection {
-        case .session(let sid):
-            let traceIds = Set(sessions.first { $0.id == sid }?.traces.map(\.traceId) ?? [])
-            return allSpans.filter { traceIds.contains($0.traceId) }
-                .sorted { $0.startTime < $1.startTime }
-        case .trace(let traceId):
-            return allSpans.filter { $0.traceId == traceId }
-                .sorted { $0.startTime < $1.startTime }
-        case nil:
-            return []
+    private func updateSelectedSpans(for newSelection: TraceSelection?) {
+        selectionTask?.cancel()
+        guard let newSelection else {
+            selectedSpans = []
+            isLoadingSelection = false
+            return
+        }
+        isLoadingSelection = true
+        selectionTask = Task { @MainActor in
+            // Yield so SwiftUI can re-render the ProgressView before we start computing
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+
+            let spans: [OTLPSpan]
+            switch newSelection {
+            case .session(let sid):
+                let traceIds = Set(cachedSessions.first { $0.id == sid }?.traces.map(\.traceId) ?? [])
+                spans = allSpans.filter { traceIds.contains($0.traceId) }
+                    .sorted { $0.startTime < $1.startTime }
+            case .trace(let traceId):
+                spans = allSpans.filter { $0.traceId == traceId }
+                    .sorted { $0.startTime < $1.startTime }
+            }
+
+            guard !Task.isCancelled else { return }
+            selectedSpans = spans
+            isLoadingSelection = false
         }
     }
 
@@ -79,36 +141,9 @@ struct TraceListView: View {
         return "unknown"
     }
 
-    var body: some View {
-        VSplitView {
-            sessionList
-                .frame(minHeight: 150)
-            switch selection {
-            case .session:
-                VStack(spacing: 0) {
-                    SessionSummaryView(spans: selectedSpans)
-                        .background(.background)
-                    Divider()
-                    GanttChartView(spans: selectedSpans)
-                }
-                .frame(minHeight: 200)
-            case .trace:
-                GanttChartView(spans: selectedSpans)
-                    .frame(minHeight: 200)
-            case nil:
-                ContentUnavailableView(
-                    "Select a Trace",
-                    systemImage: "chart.bar.doc.horizontal",
-                    description: Text("Select a trace from the list above to see the Gantt chart")
-                )
-            }
-        }
-        .navigationTitle("Traces")
-    }
-
     private var sessionList: some View {
         List(selection: $selection) {
-            ForEach(sessions) { session in
+            ForEach(cachedSessions) { session in
                 let isExpanded = Binding(
                     get: { expandedSessions.contains(session.id) },
                     set: { if $0 { expandedSessions.insert(session.id) } else { expandedSessions.remove(session.id) } }
