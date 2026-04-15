@@ -28,7 +28,7 @@ enum OTLPSpanStatus: Int, Codable {
 @Model
 final class SpanAttribute {
     var key: String
-    /// AttributeValue を JSON 文字列として保存（SwiftData は associated-value enum を直接サポートしない）
+    /// Stores AttributeValue as a JSON string because SwiftData does not natively support enums with associated values.
     var valueJSON: String
 
     init(key: String, value: AttributeValue) {

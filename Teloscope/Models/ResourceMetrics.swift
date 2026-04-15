@@ -2,7 +2,7 @@
 import Foundation
 import SwiftData
 
-/// Metrics は現フェーズでは rawData 保存のみ。表示は将来フェーズ。
+/// Metrics are stored as raw data only in the current phase. Visualization is planned for a future phase.
 @Model
 final class ResourceMetrics {
     var receivedAt: Date
