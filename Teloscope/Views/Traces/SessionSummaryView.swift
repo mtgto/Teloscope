@@ -53,8 +53,8 @@ struct SessionSummary {
         var rejectedCount = 0
         var hasDecisionData = false
 
-        let approvedValues = Set(["approved", "yes", "allow", "true"])
-        let rejectedValues = Set(["rejected", "no", "deny", "false"])
+        let approvedValues = Set(["accept"])
+        let rejectedValues = Set(["reject"])
 
         for span in spans {
             if span.name.hasPrefix("claude_code.llm_request") {
@@ -70,9 +70,10 @@ struct SessionSummary {
                 } else if rejectedValues.contains(decision) {
                     rejectedCount += 1
                 }
-            } else if span.name.hasPrefix("claude_code.tool") {
-                let toolName = stringAttr(span, "tool.name") ?? span.name
-                toolCounts[toolName, default: 0] += 1
+            } else if span.name == "claude_code.tool" {
+                if let toolName = stringAttr(span, "tool_name") {
+                    toolCounts[toolName, default: 0] += 1
+                }
             }
         }
 
