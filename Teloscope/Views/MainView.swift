@@ -28,7 +28,7 @@ struct MainView: View {
     var body: some View {
         NavigationSplitView {
             List(SidebarItem.allCases, selection: $selectedItem) { item in
-                Label(item.rawValue, systemImage: item.systemImage)
+                Label(LocalizedStringKey(item.rawValue), systemImage: item.systemImage)
                     .tag(item)
             }
             .navigationSplitViewColumnWidth(min: 160, ideal: 180)
