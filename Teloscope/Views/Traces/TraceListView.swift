@@ -64,6 +64,7 @@ struct TraceListView: View {
                     systemImage: "chart.bar.doc.horizontal",
                     description: Text("Select a trace from the list above to see the Gantt chart")
                 )
+                .frame(maxWidth: .infinity)
             }
         }
         .navigationTitle("Traces")
