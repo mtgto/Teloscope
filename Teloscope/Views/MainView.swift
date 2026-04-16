@@ -35,7 +35,7 @@ struct MainView: View {
         } detail: {
             switch selectedItem {
             case .traces: TraceListView()
-            case .metrics: ContentUnavailableView("Metrics", systemImage: "chart.line.uptrend.xyaxis", description: Text("Coming soon"))
+            case .metrics: MetricsView()
             case .logs: ContentUnavailableView("Logs", systemImage: "doc.text", description: Text("Coming soon"))
             case .settings: SettingsView()
             case nil: ContentUnavailableView("Select an item", systemImage: "sidebar.left")
