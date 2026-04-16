@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-import Foundation
 
 struct ModelPricing {
     let inputPerMillion: Double
