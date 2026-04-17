@@ -2,6 +2,7 @@
 import Testing
 import SwiftData
 import SwiftProtobuf
+import Foundation
 @testable import Teloscope
 
 struct OTLPIngestionServiceTests {

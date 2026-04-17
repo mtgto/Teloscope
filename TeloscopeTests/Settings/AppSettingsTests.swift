@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import Testing
+import Foundation
 @testable import Teloscope
 
 struct AppSettingsTests {

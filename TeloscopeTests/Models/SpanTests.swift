@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import Testing
 import SwiftData
+import Foundation
 @testable import Teloscope
 
 struct SpanTests {
