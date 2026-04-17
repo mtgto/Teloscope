@@ -26,7 +26,14 @@ struct SpanDetailView: View {
                     .foregroundStyle(.secondary)
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 2) {
                     ForEach(span.attributes, id: \.key) { attr in
-                        detailRow(attr.key, attr.value.map { "\($0)" } ?? "")
+                        GridRow {
+                            Text(attr.key)
+                                .foregroundStyle(.secondary)
+                                .gridColumnAlignment(.trailing)
+                            Text(attr.value.map { "\($0)" } ?? "")
+                                .font(.system(.body, design: .monospaced))
+                                .textSelection(.enabled)
+                        }
                     }
                 }
             }
@@ -35,17 +42,9 @@ struct SpanDetailView: View {
         .frame(maxWidth: 400)
     }
 
-    private func detailRow(_ label: String, _ value: String) -> some View {
-        detailRow(Text(label), value: value)
-    }
-
     private func detailRow(_ label: LocalizedStringKey, _ value: String) -> some View {
-        detailRow(Text(label), value: value)
-    }
-
-    private func detailRow(_ labelText: Text, value: String) -> some View {
         GridRow {
-            labelText
+            Text(label)
                 .foregroundStyle(.secondary)
                 .gridColumnAlignment(.trailing)
             Text(value)
