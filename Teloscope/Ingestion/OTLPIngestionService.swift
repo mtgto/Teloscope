@@ -19,7 +19,7 @@ final class OTLPIngestionService {
     }
 
     private func ingestTraces(_ data: Data) {
-        guard let proto = try? Opentelemetry_Proto_Collector_Trace_V1_ExportTraceServiceRequest(serializedData: data) else { return }
+        guard let proto = try? Opentelemetry_Proto_Collector_Trace_V1_ExportTraceServiceRequest(serializedBytes: data) else { return }
         for rsProto in proto.resourceSpans {
             let rs = ResourceSpans()
             rs.resourceAttributes = rsProto.resource.attributes.map {
