@@ -49,6 +49,10 @@ A macOS 14+ app that acts as an OpenTelemetry collector. It receives OTLP/HTTP s
 | [swift-nio](https://github.com/apple/swift-nio) | 2.65.0+ | OTLP/HTTP server |
 | [swift-protobuf](https://github.com/apple/swift-protobuf) | 1.28.0+ | Protobuf decoding |
 
+### App Sandbox
+
+The app runs under App Sandbox with **incoming connections** (`com.apple.security.network.server`) enabled to accept OTLP/HTTP traffic. Outgoing connections (`com.apple.security.network.client`) are **disabled in Release** but **enabled in Debug** to allow `OTLPServerTests` to make `URLSession` requests to the local test server. The Release build has no outgoing network capability.
+
 ### Regenerating Protobuf Swift files
 
 The files under `Teloscope/Generated/` are generated from the [opentelemetry-proto](https://github.com/open-telemetry/opentelemetry-proto) definitions (v1.3.2). To regenerate them, install `protoc` and `protoc-gen-swift`, then run:
