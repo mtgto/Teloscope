@@ -26,10 +26,8 @@ struct StatWidgetView: View {
                         }
                     }
                 }
-                Spacer(minLength: 0)
             }
         }
-        .frame(maxHeight: .infinity)
     }
 }
 

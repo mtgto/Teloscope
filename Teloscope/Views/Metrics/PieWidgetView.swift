@@ -59,7 +59,6 @@ struct PieWidgetView: View {
                 }
             }
         }
-        .frame(maxHeight: .infinity)
     }
 }
 
