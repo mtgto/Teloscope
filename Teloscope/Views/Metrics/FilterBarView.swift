@@ -6,6 +6,7 @@ struct FilterBarView: View {
     @Binding var dateRange: DateInterval
     @Binding var selectedModels: Set<String>
 
+    @State private var activePreset: Preset? = .sevenDays
     @State private var showCustomPicker = false
     @State private var showModelPicker = false
     @State private var customStart = Date()
@@ -40,9 +41,12 @@ struct FilterBarView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 ForEach(Preset.allCases, id: \.self) { preset in
-                    Button(preset.rawValue) { dateRange = preset.dateInterval() }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
+                    Button(preset.rawValue) {
+                        activePreset = preset
+                        dateRange = preset.dateInterval()
+                    }
+                    .buttonStyle(activePreset == preset ? .borderedProminent : .bordered)
+                    .controlSize(.small)
                 }
                 Button {
                     customStart = dateRange.start
@@ -51,7 +55,7 @@ struct FilterBarView: View {
                 } label: {
                     Label("Custom", systemImage: "calendar")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(activePreset == nil ? .borderedProminent : .bordered)
                 .controlSize(.small)
                 .popover(isPresented: $showCustomPicker) { customDatePicker }
             }
@@ -87,6 +91,7 @@ struct FilterBarView: View {
                     dateRange = DateInterval(
                         start: cal.startOfDay(for: customStart),
                         end:   cal.startOfDay(for: customEnd).addingTimeInterval(86399))
+                    activePreset = nil
                     showCustomPicker = false
                 }
                 .buttonStyle(.borderedProminent)
