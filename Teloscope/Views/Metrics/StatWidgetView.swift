@@ -9,11 +9,16 @@ struct StatWidgetView: View {
     var body: some View {
         GroupBox(title) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(primaryValue)
-                    .font(.title2.monospacedDigit())
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                if !rows.isEmpty {
+                if rows.isEmpty {
+                    Text(primaryValue)
+                        .font(.title.monospacedDigit())
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                } else {
+                    Text(primaryValue)
+                        .font(.title2.monospacedDigit())
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     Divider()
                     ForEach(rows, id: \.label) { row in
                         HStack {
@@ -27,6 +32,7 @@ struct StatWidgetView: View {
                     }
                 }
             }
+            .frame(maxHeight: .infinity)
         }
     }
 }
