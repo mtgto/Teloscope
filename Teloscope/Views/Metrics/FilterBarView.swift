@@ -40,8 +40,15 @@ struct FilterBarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                ForEach(Preset.allCases, id: \.self) { preset in
-                    presetButton(preset)
+                Picker("", selection: $activePreset) {
+                    ForEach(Preset.allCases, id: \.self) { preset in
+                        Text(preset.rawValue).tag(Optional(preset))
+                    }
+                }
+                .pickerStyle(.segmented)
+                .fixedSize()
+                .onChange(of: activePreset) { _, preset in
+                    if let preset { dateRange = preset.dateInterval() }
                 }
                 customButton
             }
@@ -63,25 +70,6 @@ struct FilterBarView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-    }
-
-    @ViewBuilder
-    private func presetButton(_ preset: Preset) -> some View {
-        if activePreset == preset {
-            Button(preset.rawValue) {
-                activePreset = preset
-                dateRange = preset.dateInterval()
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-        } else {
-            Button(preset.rawValue) {
-                activePreset = preset
-                dateRange = preset.dateInterval()
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-        }
     }
 
     @ViewBuilder
