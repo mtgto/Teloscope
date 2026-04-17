@@ -35,9 +35,17 @@ struct SpanDetailView: View {
         .frame(maxWidth: 400)
     }
 
+    private func detailRow(_ label: String, _ value: String) -> some View {
+        detailRow(Text(label), value: value)
+    }
+
     private func detailRow(_ label: LocalizedStringKey, _ value: String) -> some View {
+        detailRow(Text(label), value: value)
+    }
+
+    private func detailRow(_ labelText: Text, value: String) -> some View {
         GridRow {
-            Text(label)
+            labelText
                 .foregroundStyle(.secondary)
                 .gridColumnAlignment(.trailing)
             Text(value)
