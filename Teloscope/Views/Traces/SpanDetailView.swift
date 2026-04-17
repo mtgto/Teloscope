@@ -30,7 +30,7 @@ struct SpanDetailView: View {
                             Text(attr.key)
                                 .foregroundStyle(.secondary)
                                 .gridColumnAlignment(.trailing)
-                            Text(attr.value.map { "\($0)" } ?? "")
+                            Text(verbatim: attr.value.map { "\($0)" } ?? "")
                                 .font(.system(.body, design: .monospaced))
                                 .textSelection(.enabled)
                         }
