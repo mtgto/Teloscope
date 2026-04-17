@@ -26,11 +26,11 @@ struct MetricsView: View {
                 } else if let m = dashboardModel.metrics, m.sessionCount > 0 || m.totalInputTokens > 0 {
                     ScrollView {
                         LazyVGrid(columns: columns, spacing: 12) {
-                            costWidget(m).frame(maxHeight: .infinity)
-                            tokensWidget(m).frame(maxHeight: .infinity)
-                            sessionsWidget(m).frame(maxHeight: .infinity)
-                            approvalWidget(m).frame(maxHeight: .infinity)
-                            modelWidget(m).frame(maxHeight: .infinity)
+                            costWidget(m)
+                            tokensWidget(m)
+                            sessionsWidget(m)
+                            approvalWidget(m)
+                            modelWidget(m)
                         }
                         .padding(12)
                     }
