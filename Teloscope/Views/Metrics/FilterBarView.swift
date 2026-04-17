@@ -12,7 +12,7 @@ struct FilterBarView: View {
     @State private var customStart = Date()
     @State private var customEnd = Date()
 
-    private enum Preset: String, CaseIterable {
+    private enum Preset: LocalizedStringKey, CaseIterable {
         case today = "Today"
         case sevenDays = "7 Days"
         case thirtyDays = "30 Days"
@@ -42,7 +42,7 @@ struct FilterBarView: View {
             HStack(spacing: 6) {
                 Picker("", selection: $activePreset) {
                     ForEach(Preset.allCases, id: \.self) { preset in
-                        Text(LocalizedStringKey(preset.rawValue)).tag(Optional(preset))
+                        Text(preset.rawValue).tag(Optional(preset))
                     }
                 }
                 .pickerStyle(.segmented)

@@ -2,12 +2,12 @@
 import SwiftUI
 
 struct StatWidgetView: View {
-    let title: String
+    let title: LocalizedStringKey
     let primaryValue: String
     let rows: [(label: String, value: String)]
 
     var body: some View {
-        GroupBox(LocalizedStringKey(title)) {
+        GroupBox(title) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(primaryValue)
                     .font(.title2.monospacedDigit())
@@ -40,6 +40,16 @@ struct StatWidgetView: View {
             (label: "Output", value: "400,000"),
             (label: "Cache Read", value: "34,567"),
         ]
+    )
+    .frame(width: 220)
+    .padding()
+}
+
+#Preview {
+    StatWidgetView(
+        title: "Total Tokens",
+        primaryValue: "$12.34",
+        rows: []
     )
     .frame(width: 220)
     .padding()
