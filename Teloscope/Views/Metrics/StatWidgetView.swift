@@ -7,7 +7,7 @@ struct StatWidgetView: View {
     let rows: [(label: String, value: String)]
 
     var body: some View {
-        GroupBox(title) {
+        GroupBox(LocalizedStringKey(title)) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(primaryValue)
                     .font(.title2.monospacedDigit())

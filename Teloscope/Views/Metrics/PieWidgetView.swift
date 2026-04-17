@@ -16,7 +16,7 @@ struct PieWidgetView: View {
     let centerLabel: String?
 
     var body: some View {
-        GroupBox(title) {
+        GroupBox(LocalizedStringKey(title)) {
             if slices.isEmpty {
                 Text("No data")
                     .foregroundStyle(.secondary)
