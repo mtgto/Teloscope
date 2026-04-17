@@ -42,7 +42,7 @@ struct FilterBarView: View {
             HStack(spacing: 6) {
                 Picker("", selection: $activePreset) {
                     ForEach(Preset.allCases, id: \.self) { preset in
-                        Text(preset.rawValue).tag(Optional(preset))
+                        Text(LocalizedStringKey(preset.rawValue)).tag(Optional(preset))
                     }
                 }
                 .pickerStyle(.segmented)
@@ -83,7 +83,6 @@ struct FilterBarView: View {
                 Label("Custom", systemImage: "calendar")
             }
             .buttonStyle(.borderedProminent)
-            .controlSize(.small)
             .popover(isPresented: $showCustomPicker) { customDatePicker }
         } else {
             Button {
@@ -94,7 +93,6 @@ struct FilterBarView: View {
                 Label("Custom", systemImage: "calendar")
             }
             .buttonStyle(.bordered)
-            .controlSize(.small)
             .popover(isPresented: $showCustomPicker) { customDatePicker }
         }
     }
