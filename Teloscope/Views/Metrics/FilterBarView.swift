@@ -41,23 +41,9 @@ struct FilterBarView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 ForEach(Preset.allCases, id: \.self) { preset in
-                    Button(preset.rawValue) {
-                        activePreset = preset
-                        dateRange = preset.dateInterval()
-                    }
-                    .buttonStyle(activePreset == preset ? .borderedProminent : .bordered)
-                    .controlSize(.small)
+                    presetButton(preset)
                 }
-                Button {
-                    customStart = dateRange.start
-                    customEnd = dateRange.end
-                    showCustomPicker = true
-                } label: {
-                    Label("Custom", systemImage: "calendar")
-                }
-                .buttonStyle(activePreset == nil ? .borderedProminent : .bordered)
-                .controlSize(.small)
-                .popover(isPresented: $showCustomPicker) { customDatePicker }
+                customButton
             }
             HStack(spacing: 6) {
                 Text("Model:")
@@ -77,6 +63,52 @@ struct FilterBarView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private func presetButton(_ preset: Preset) -> some View {
+        if activePreset == preset {
+            Button(preset.rawValue) {
+                activePreset = preset
+                dateRange = preset.dateInterval()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+        } else {
+            Button(preset.rawValue) {
+                activePreset = preset
+                dateRange = preset.dateInterval()
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
+    }
+
+    @ViewBuilder
+    private var customButton: some View {
+        if activePreset == nil {
+            Button {
+                customStart = dateRange.start
+                customEnd = dateRange.end
+                showCustomPicker = true
+            } label: {
+                Label("Custom", systemImage: "calendar")
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            .popover(isPresented: $showCustomPicker) { customDatePicker }
+        } else {
+            Button {
+                customStart = dateRange.start
+                customEnd = dateRange.end
+                showCustomPicker = true
+            } label: {
+                Label("Custom", systemImage: "calendar")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .popover(isPresented: $showCustomPicker) { customDatePicker }
+        }
     }
 
     private var customDatePicker: some View {
