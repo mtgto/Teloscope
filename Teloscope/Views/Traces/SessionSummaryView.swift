@@ -134,7 +134,11 @@ struct SessionSummaryView: View {
             } else {
                 VStack(spacing: 2) {
                     ForEach(summary.topTools, id: \.name) { tool in
-                        LabeledValue(label: tool.name, value: "\(tool.count)")
+                        HStack {
+                            Text(tool.name).foregroundStyle(.secondary).font(.caption)
+                            Spacer()
+                            Text("\(tool.count)").font(.caption.monospacedDigit())
+                        }
                     }
                 }
             }
@@ -167,7 +171,7 @@ struct SessionSummaryView: View {
 // MARK: - LabeledValue
 
 private struct LabeledValue: View {
-    let label: String
+    let label: LocalizedStringKey
     let value: String
 
     var body: some View {

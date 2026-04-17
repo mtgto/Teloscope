@@ -35,7 +35,7 @@ struct SpanDetailView: View {
         .frame(maxWidth: 400)
     }
 
-    private func detailRow(_ label: String, _ value: String) -> some View {
+    private func detailRow(_ label: LocalizedStringKey, _ value: String) -> some View {
         GridRow {
             Text(label)
                 .foregroundStyle(.secondary)

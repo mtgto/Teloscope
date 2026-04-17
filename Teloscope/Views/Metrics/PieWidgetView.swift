@@ -10,13 +10,13 @@ struct PieSlice: Identifiable {
 }
 
 struct PieWidgetView: View {
-    let title: String
+    let title: LocalizedStringKey
     let slices: [PieSlice]
     /// Short text rendered in the donut hole (e.g. "78%"). Pass nil to omit.
     let centerLabel: String?
 
     var body: some View {
-        GroupBox(LocalizedStringKey(title)) {
+        GroupBox(title) {
             if slices.isEmpty {
                 Text("No data")
                     .foregroundStyle(.secondary)

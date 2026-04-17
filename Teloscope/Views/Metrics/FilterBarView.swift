@@ -59,9 +59,11 @@ struct FilterBarView: View {
                 Button {
                     showModelPicker = true
                 } label: {
-                    Text(selectedModels.isEmpty
-                         ? "All Models"
-                         : selectedModels.sorted().joined(separator: ", "))
+                    if selectedModels.isEmpty {
+                        Text("All Models")
+                    } else {
+                        Text(selectedModels.sorted().joined(separator: ", "))
+                    }
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)

@@ -18,6 +18,15 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .settings: return "gear"
         }
     }
+
+    var localizedName: LocalizedStringKey {
+        switch self {
+        case .traces:  "Traces"
+        case .metrics: "Metrics"
+        case .logs:    "Logs"
+        case .settings: "Settings"
+        }
+    }
 }
 
 struct MainView: View {
@@ -28,7 +37,7 @@ struct MainView: View {
     var body: some View {
         NavigationSplitView {
             List(SidebarItem.allCases, selection: $selectedItem) { item in
-                Label(LocalizedStringKey(item.rawValue), systemImage: item.systemImage)
+                Label(item.localizedName, systemImage: item.systemImage)
                     .tag(item)
             }
             .navigationSplitViewColumnWidth(min: 160, ideal: 180)
