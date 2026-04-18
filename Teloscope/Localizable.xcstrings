@@ -623,7 +623,14 @@
       }
     },
     "Start" : {
-
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開始"
+          }
+        }
+      }
     },
     "Start Server" : {
       "comment" : "A button that starts an OTLP server.",
