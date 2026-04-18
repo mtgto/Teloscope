@@ -30,7 +30,7 @@ struct BarWidgetView: View {
                             x: .value("Count", item.count),
                             y: .value("Tool", item.name)
                         )
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Color.accentColor)
                         .annotation(position: .trailing, alignment: .leading, spacing: 4) {
                             Text("\(item.count)")
                                 .font(.caption2.monospacedDigit())
