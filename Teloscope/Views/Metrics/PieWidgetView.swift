@@ -27,6 +27,7 @@ struct PieWidgetView: View {
                     .padding(.vertical, 8)
             } else {
                 HStack(alignment: .center, spacing: 12) {
+                    Spacer()
                     // Charts は .redacted に対応していないため、.placeholder 時のみ Circle で代替
                     // .invalidated 時は実チャートをそのまま表示（親の redaction でぼかされる）
                     if redactionReasons.contains(.placeholder) {

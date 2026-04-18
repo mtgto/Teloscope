@@ -16,6 +16,7 @@ struct LineWidgetView: View {
     let granularity: TimeGranularity
 
     @Environment(\.redactionReasons) private var redactionReasons
+    @State private var selectedDate: Date?
 
     var body: some View {
         GroupBox {
@@ -48,6 +49,18 @@ struct LineWidgetView: View {
                                 .symbolSize(20)
                             }
                         }
+                        if let selectedDate {
+                            RuleMark(x: .value("Selected", selectedDate))
+                                .foregroundStyle(.secondary.opacity(0.4))
+                                .lineStyle(StrokeStyle(lineWidth: 1, dash: [4]))
+                                .annotation(
+                                    position: .top,
+                                    spacing: 4,
+                                    overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))
+                                ) {
+                                    tooltipView(for: selectedDate)
+                                }
+                        }
                     }
                     .chartForegroundStyleScale(
                         domain: series.map(\.label),
@@ -61,6 +74,7 @@ struct LineWidgetView: View {
                     }
                     .chartYAxisLabel(yAxisLabel, position: .leading)
                     .chartLegend(.hidden)
+                    .chartXSelection(value: $selectedDate)
                     .frame(height: 100)
 
                     if series.count > 1 {
@@ -83,6 +97,43 @@ struct LineWidgetView: View {
         } label: {
             Text(title).unredacted()
         }
+    }
+
+    private func tooltipView(for date: Date) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(date, format: xAxisFormat)
+                .font(.caption2.bold())
+                .foregroundStyle(.primary)
+            ForEach(series) { s in
+                if let point = nearestPoint(in: s.dataPoints, to: date) {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(s.color)
+                            .frame(width: 6, height: 6)
+                        Text(formattedValue(point.value))
+                            .font(.caption2.monospacedDigit())
+                            .foregroundStyle(.primary)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
+    }
+
+    private func nearestPoint(
+        in dataPoints: [(date: Date, value: Double)],
+        to date: Date
+    ) -> (date: Date, value: Double)? {
+        dataPoints.min(by: { abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date)) })
+    }
+
+    private func formattedValue(_ value: Double) -> String {
+        if yAxisLabel == "USD" {
+            return value.formatted(.currency(code: "USD"))
+        }
+        return value.formatted(.number.precision(.fractionLength(0)))
     }
 
     private var xAxisFormat: Date.FormatStyle {
