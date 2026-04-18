@@ -14,6 +14,7 @@ struct LineWidgetView: View {
     let series: [LineSeries]
     let yAxisLabel: String
     let granularity: TimeGranularity
+    let xDomain: ClosedRange<Date>
 
     @Environment(\.redactionReasons) private var redactionReasons
     @State private var selectedDate: Date?
@@ -54,9 +55,9 @@ struct LineWidgetView: View {
                                 .foregroundStyle(.secondary.opacity(0.4))
                                 .lineStyle(StrokeStyle(lineWidth: 1, dash: [4]))
                                 .annotation(
-                                    position: .top,
+                                    position: .automatic,
                                     spacing: 4,
-                                    overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))
+                                    overflowResolution: .init(x: .automatic, y: .fit(to: .chart))
                                 ) {
                                     tooltipView(for: selectedDate)
                                 }
@@ -72,6 +73,7 @@ struct LineWidgetView: View {
                             AxisGridLine()
                         }
                     }
+                    .chartXScale(domain: xDomain)
                     .chartYAxisLabel(yAxisLabel, position: .leading)
                     .chartLegend(.hidden)
                     .chartXSelection(value: $selectedDate)
@@ -166,7 +168,8 @@ private let sampleDates: [Date] = (0..<24).map {
             ),
         ],
         yAxisLabel: "tokens",
-        granularity: .hourly
+        granularity: .hourly,
+        xDomain: sampleDates.first!...sampleDates.last!
     )
     .frame(width: 300)
     .padding()
@@ -183,7 +186,28 @@ private let sampleDates: [Date] = (0..<24).map {
             ),
         ],
         yAxisLabel: "USD",
-        granularity: .hourly
+        granularity: .hourly,
+        xDomain: sampleDates.first!...sampleDates.last!
+    )
+    .frame(width: 300)
+    .padding()
+}
+
+// Hours 0-3 missing (start gap), 10-13 missing (middle gap), 20-23 missing (end gap)
+private let gappedDates: [(date: Date, value: Double)] = sampleDates.enumerated().compactMap { i, d in
+    guard !(0...3).contains(i), !(10...13).contains(i), !(20...23).contains(i) else { return nil }
+    return (date: d, value: Double(i * 1200 + 800))
+}
+
+#Preview("With gaps") {
+    LineWidgetView(
+        title: "Tokens Over Time",
+        series: [
+            LineSeries(label: "Input Tokens", color: .blue, dataPoints: gappedDates),
+        ],
+        yAxisLabel: "tokens",
+        granularity: .hourly,
+        xDomain: sampleDates.first!...sampleDates.last!
     )
     .frame(width: 300)
     .padding()
@@ -194,7 +218,8 @@ private let sampleDates: [Date] = (0..<24).map {
         title: "Tokens Over Time",
         series: [],
         yAxisLabel: "tokens",
-        granularity: .hourly
+        granularity: .hourly,
+        xDomain: sampleDates.first!...sampleDates.last!
     )
     .redacted(reason: .placeholder)
     .frame(width: 300)

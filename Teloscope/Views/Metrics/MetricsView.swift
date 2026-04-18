@@ -119,8 +119,7 @@ struct MetricsView: View {
     }
 
     private func tokensTimelineWidget(_ m: MetricsSummary?) -> some View {
-        let granularity = m?.timeGranularity ?? .hourly
-        return LineWidgetView(
+        LineWidgetView(
             title: "Tokens Over Time",
             series: [
                 LineSeries(
@@ -135,7 +134,8 @@ struct MetricsView: View {
                 ),
             ],
             yAxisLabel: String(localized: "tokens"),
-            granularity: granularity
+            granularity: m?.timeGranularity ?? .hourly,
+            xDomain: dateRange.start...dateRange.end
         )
     }
 
@@ -150,7 +150,8 @@ struct MetricsView: View {
                 ),
             ],
             yAxisLabel: "USD",
-            granularity: m?.timeGranularity ?? .hourly
+            granularity: m?.timeGranularity ?? .hourly,
+            xDomain: dateRange.start...dateRange.end
         )
     }
 
@@ -165,7 +166,8 @@ struct MetricsView: View {
                 ),
             ],
             yAxisLabel: String(localized: "requests"),
-            granularity: m?.timeGranularity ?? .hourly
+            granularity: m?.timeGranularity ?? .hourly,
+            xDomain: dateRange.start...dateRange.end
         )
     }
 

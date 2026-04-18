@@ -129,15 +129,15 @@ struct MetricsSummary {
         }
 
         self.timeGranularity = granularity
-        self.hourlyTokens = allBucketDates.map { date in
-            let v = tokenBuckets[date] ?? (input: 0, output: 0)
+        self.hourlyTokens = allBucketDates.compactMap { date in
+            guard let v = tokenBuckets[date] else { return nil }
             return (date: date, input: v.input, output: v.output)
         }
-        self.hourlyCost = allBucketDates.map { date in
-            (date: date, value: costBuckets[date] ?? 0)
+        self.hourlyCost = allBucketDates.compactMap { date in
+            costBuckets[date].map { (date: date, value: $0) }
         }
-        self.hourlyRequests = allBucketDates.map { date in
-            (date: date, value: requestBuckets[date] ?? 0)
+        self.hourlyRequests = allBucketDates.compactMap { date in
+            requestBuckets[date].map { (date: date, value: $0) }
         }
     }
 
