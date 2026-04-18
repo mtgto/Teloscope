@@ -131,6 +131,8 @@ struct MetricsSummary {
             .map { (name: $0.key, count: $0.value) }
         self.usageHeatmap = heatCounts.flatMap { wd, hours in
             hours.map { hr, cnt in (weekday: wd, hour: hr, count: cnt) }
+        }.sorted { lhs, rhs in
+            lhs.weekday != rhs.weekday ? lhs.weekday < rhs.weekday : lhs.hour < rhs.hour
         }
 
         // Build time series data bucketed by granularity
