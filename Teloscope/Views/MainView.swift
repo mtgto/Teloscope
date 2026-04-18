@@ -3,8 +3,8 @@ import SwiftUI
 import SwiftData
 
 enum SidebarItem: String, CaseIterable, Identifiable {
-    case traces = "Traces"
     case metrics = "Metrics"
+    case traces = "Traces"
     case logs = "Logs"
     case settings = "Settings"
 
@@ -32,7 +32,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
 struct MainView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(OTLPServer.self) private var server
-    @State private var selectedItem: SidebarItem? = .traces
+    @State private var selectedItem: SidebarItem? = .metrics
 
     var body: some View {
         NavigationSplitView {
