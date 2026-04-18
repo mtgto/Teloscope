@@ -5,9 +5,10 @@ struct StatWidgetView: View {
     let title: LocalizedStringKey
     let primaryValue: String
     let rows: [(label: String, value: String)]
+    var isLoading: Bool = false
 
     var body: some View {
-        GroupBox(title) {
+        GroupBox {
             VStack(alignment: .leading, spacing: 4) {
                 if rows.isEmpty {
                     Text(primaryValue)
@@ -33,7 +34,10 @@ struct StatWidgetView: View {
                 }
             }
             .frame(maxHeight: .infinity)
+        } label: {
+            Text(title).unredacted()
         }
+        .redacted(reason: isLoading ? .placeholder : [])
     }
 }
 
@@ -51,11 +55,26 @@ struct StatWidgetView: View {
     .padding()
 }
 
-#Preview {
+#Preview("Empty rows") {
     StatWidgetView(
-        title: "Total Tokens",
+        title: "Total Cost",
         primaryValue: "$12.34",
         rows: []
+    )
+    .frame(width: 220)
+    .padding()
+}
+
+#Preview("Loading") {
+    StatWidgetView(
+        title: "Total Tokens",
+        primaryValue: "000,000",
+        rows: [
+            (label: "Input", value: "000,000"),
+            (label: "Output", value: "000,000"),
+            (label: "Cache Read", value: "000,000"),
+        ],
+        isLoading: true
     )
     .frame(width: 220)
     .padding()

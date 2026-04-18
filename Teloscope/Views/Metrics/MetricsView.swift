@@ -21,18 +21,9 @@ struct MetricsView: View {
             Divider()
             Group {
                 if let m = dashboardModel.metrics, m.sessionCount > 0 || m.totalInputTokens > 0 {
-                    ScrollView {
-                        LazyVGrid(columns: columns, spacing: 12) {
-                            costWidget(m)
-                            tokensWidget(m)
-                            sessionsWidget(m)
-                            approvalWidget(m)
-                            modelWidget(m)
-                        }
-                        .padding(12)
-                    }
+                    metricsGrid(m, isLoading: false)
                 } else if dashboardModel.isLoading {
-                    skeletonGrid
+                    metricsGrid(nil, isLoading: true)
                 } else {
                     ContentUnavailableView(
                         "No Data",
@@ -61,111 +52,84 @@ struct MetricsView: View {
         dashboardModel.update(spans: allSpans, dateRange: dateRange, selectedModels: selectedModels)
     }
 
-    private var skeletonGrid: some View {
+    private func metricsGrid(_ m: MetricsSummary?, isLoading: Bool) -> some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 12) {
-                GroupBox { skeletonSingleValue.redacted(reason: .placeholder) } label: { Text("Total Cost") }
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("000,000")
-                            .font(.title2.monospacedDigit()).fontWeight(.semibold)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        Divider()
-                        ForEach(["Input", "Output", "Cache Read"], id: \.self) { label in
-                            HStack {
-                                Text(label).foregroundStyle(.secondary).font(.caption)
-                                Spacer()
-                                Text("000,000").font(.caption.monospacedDigit())
-                            }
-                        }
-                    }
-                    .redacted(reason: .placeholder)
-                } label: { Text("Total Tokens") }
-                GroupBox { skeletonSingleValue.redacted(reason: .placeholder) } label: { Text("Sessions") }
-                GroupBox { skeletonPie(rows: 2).redacted(reason: .placeholder) } label: { Text("Approval Rate") }
-                GroupBox { skeletonPie(rows: 2).redacted(reason: .placeholder) } label: { Text("Model Distribution") }
+                costWidget(m, isLoading: isLoading)
+                tokensWidget(m, isLoading: isLoading)
+                sessionsWidget(m, isLoading: isLoading)
+                approvalWidget(m, isLoading: isLoading)
+                modelWidget(m, isLoading: isLoading)
             }
             .padding(12)
         }
-        .allowsHitTesting(false)
+        .allowsHitTesting(!isLoading)
     }
 
-    private func skeletonPie(rows: Int) -> some View {
-        HStack(alignment: .center, spacing: 12) {
-            Circle().fill(.gray.opacity(0.3)).frame(width: 80, height: 80)
-            VStack(alignment: .leading, spacing: 4) {
-                ForEach(0..<rows, id: \.self) { _ in
-                    HStack(spacing: 4) {
-                        Circle().frame(width: 8, height: 8)
-                        Text("placeholder label").font(.caption).lineLimit(1)
-                    }
-                }
-            }
-            Spacer()
-        }
-    }
-
-    private var skeletonSingleValue: some View {
-        Text("000")
-            .font(.title.monospacedDigit()).fontWeight(.semibold)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-    }
-
-    private func costWidget(_ m: MetricsSummary) -> some View {
+    private func costWidget(_ m: MetricsSummary?, isLoading: Bool) -> some View {
         StatWidgetView(
             title: "Total Cost",
-            primaryValue: m.totalCostUSD.formatted(.currency(code: "USD")),
-            rows: []
+            primaryValue: m?.totalCostUSD.formatted(.currency(code: "USD")) ?? "$0.0000",
+            rows: [],
+            isLoading: isLoading
         )
     }
 
-    private func tokensWidget(_ m: MetricsSummary) -> some View {
-        let total = m.totalInputTokens + m.totalOutputTokens + m.totalCacheReadTokens
+    private func tokensWidget(_ m: MetricsSummary?, isLoading: Bool) -> some View {
+        let total = m.map { $0.totalInputTokens + $0.totalOutputTokens + $0.totalCacheReadTokens }
         return StatWidgetView(
             title: "Total Tokens",
-            primaryValue: total.formatted(.number),
+            primaryValue: total?.formatted(.number) ?? "000,000",
             rows: [
-                (label: "Input",      value: m.totalInputTokens.formatted(.number)),
-                (label: "Output",     value: m.totalOutputTokens.formatted(.number)),
-                (label: "Cache Read", value: m.totalCacheReadTokens.formatted(.number)),
-            ]
+                (label: "Input",      value: m?.totalInputTokens.formatted(.number) ?? "000,000"),
+                (label: "Output",     value: m?.totalOutputTokens.formatted(.number) ?? "000,000"),
+                (label: "Cache Read", value: m?.totalCacheReadTokens.formatted(.number) ?? "000,000"),
+            ],
+            isLoading: isLoading
         )
     }
 
-    private func sessionsWidget(_ m: MetricsSummary) -> some View {
+    private func sessionsWidget(_ m: MetricsSummary?, isLoading: Bool) -> some View {
         StatWidgetView(
             title: "Sessions",
-            primaryValue: m.sessionCount.formatted(.number),
-            rows: []
+            primaryValue: m?.sessionCount.formatted(.number) ?? "000",
+            rows: [],
+            isLoading: isLoading
         )
     }
 
-    private func approvalWidget(_ m: MetricsSummary) -> some View {
+    private func approvalWidget(_ m: MetricsSummary?, isLoading: Bool) -> some View {
         let slices: [PieSlice]
         let centerLabel: String?
-        if m.hasApprovalData {
+        if let m, m.hasApprovalData {
             slices = [
                 PieSlice(label: "Approved (\(m.approvalCount))", value: Double(m.approvalCount), color: .green),
                 PieSlice(label: "Rejected (\(m.rejectionCount))", value: Double(m.rejectionCount), color: .red),
             ]
             centerLabel = m.approvalRate.map { "\(Int($0 * 100))%" }
         } else {
-            slices = []
+            slices = [
+                PieSlice(label: "Approved (00)", value: 1, color: .green),
+                PieSlice(label: "Rejected (00)", value: 1, color: .red),
+            ]
             centerLabel = nil
         }
-        return PieWidgetView(title: "Approval Rate", slices: slices, centerLabel: centerLabel)
+        return PieWidgetView(title: "Approval Rate", slices: slices, centerLabel: centerLabel, isLoading: isLoading)
     }
 
-    private func modelWidget(_ m: MetricsSummary) -> some View {
+    private func modelWidget(_ m: MetricsSummary?, isLoading: Bool) -> some View {
         let palette: [Color] = [.blue, .orange, .green, .purple, .teal, .pink]
-        let slices = m.modelDistribution.enumerated().map { i, entry in
+        let slices = m?.modelDistribution.enumerated().map { i, entry in
             PieSlice(
                 label: "\(entry.model) (\(entry.requestCount))",
                 value: Double(entry.requestCount),
                 color: palette[i % palette.count]
             )
-        }
-        return PieWidgetView(title: "Model Distribution", slices: slices, centerLabel: nil)
+        } ?? [
+            PieSlice(label: "model-name (00)", value: 1, color: .blue),
+            PieSlice(label: "model-name (00)", value: 1, color: .orange),
+        ]
+        return PieWidgetView(title: "Model Distribution", slices: slices, centerLabel: nil, isLoading: isLoading)
     }
 }
 
