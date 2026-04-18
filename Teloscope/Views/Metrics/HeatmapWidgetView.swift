@@ -11,15 +11,15 @@ struct HeatmapWidgetView: View {
         ("Mon", 2), ("Tue", 3), ("Wed", 4), ("Thu", 5), ("Fri", 6), ("Sat", 7), ("Sun", 1),
     ]
 
-    private var countMap: [Int: [Int: Int]] {
+    private var countMapAndMax: (map: [Int: [Int: Int]], maxCount: Int) {
         var map: [Int: [Int: Int]] = [:]
+        var maxC = 0
         for entry in data {
             map[entry.weekday, default: [:]][entry.hour] = entry.count
+            if entry.count > maxC { maxC = entry.count }
         }
-        return map
+        return (map, max(maxC, 1))
     }
-
-    private var maxCount: Int { data.map(\.count).max() ?? 1 }
 
     @Environment(\.redactionReasons) private var redactionReasons
 
@@ -29,9 +29,14 @@ struct HeatmapWidgetView: View {
                 RoundedRectangle(cornerRadius: 4)
                     .fill(.gray.opacity(0.3))
                     .frame(height: 86)
+            } else if data.isEmpty {
+                Text("No data")
+                    .foregroundStyle(.secondary)
+                    .font(.caption)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 8)
             } else {
-                let map = countMap
-                let maxC = maxCount
+                let (map, maxC) = countMapAndMax
                 VStack(alignment: .leading, spacing: 2) {
                     // Weekday rows — 24 equal-width flexible cells per row
                     ForEach(orderedWeekdays, id: \.calValue) { wd in

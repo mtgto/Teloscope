@@ -583,6 +583,7 @@ private func metricsGrid(_ m: MetricsSummary?) -> some View {
             approvalWidget(m)
             modelWidget(m)
             toolRankingWidget(m)
+            usageHeatmapWidget(m)
             tokensTimelineWidget(m)
             costTimelineWidget(m)
             requestsTimelineWidget(m)
