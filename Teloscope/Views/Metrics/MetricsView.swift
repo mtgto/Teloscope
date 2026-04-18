@@ -64,6 +64,7 @@ struct MetricsView: View {
                 sessionsWidget(m)
                 approvalWidget(m)
                 modelWidget(m)
+                toolRankingWidget(m)
                 tokensTimelineWidget(m)
                 costTimelineWidget(m)
                 requestsTimelineWidget(m)
@@ -170,6 +171,13 @@ struct MetricsView: View {
             yAxisLabel: String(localized: "requests"),
             granularity: m?.timeGranularity ?? .hourly,
             xDomain: dateRange.start...dateRange.end
+        )
+    }
+
+    private func toolRankingWidget(_ m: MetricsSummary?) -> some View {
+        BarWidgetView(
+            title: "Tool Usage",
+            items: m?.toolRanking ?? []
         )
     }
 
