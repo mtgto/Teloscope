@@ -1,0 +1,99 @@
+// SPDX-License-Identifier: MIT
+import SwiftUI
+
+struct HeatmapWidgetView: View {
+    let title: LocalizedStringKey
+    /// Flat list of (weekday, hour, count) entries. weekday uses Calendar convention: 1=Sun…7=Sat.
+    let data: [(weekday: Int, hour: Int, count: Int)]
+
+    // Mon–Sun display order. Calendar weekday values: Mon=2, Tue=3, ..., Sat=7, Sun=1.
+    private let orderedWeekdays: [(label: String, calValue: Int)] = [
+        ("Mon", 2), ("Tue", 3), ("Wed", 4), ("Thu", 5), ("Fri", 6), ("Sat", 7), ("Sun", 1),
+    ]
+
+    private var countMap: [Int: [Int: Int]] {
+        var map: [Int: [Int: Int]] = [:]
+        for entry in data {
+            map[entry.weekday, default: [:]][entry.hour] = entry.count
+        }
+        return map
+    }
+
+    private var maxCount: Int { data.map(\.count).max() ?? 1 }
+
+    @Environment(\.redactionReasons) private var redactionReasons
+
+    var body: some View {
+        GroupBox {
+            if redactionReasons.contains(.placeholder) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(.gray.opacity(0.3))
+                    .frame(height: 86)
+            } else {
+                let map = countMap
+                let maxC = maxCount
+                VStack(alignment: .leading, spacing: 2) {
+                    // Weekday rows — 24 equal-width flexible cells per row
+                    ForEach(orderedWeekdays, id: \.calValue) { wd in
+                        HStack(spacing: 0) {
+                            Text(wd.label)
+                                .font(.system(size: 8))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 28, alignment: .leading)
+                                .padding(.trailing, 2)
+                            HStack(spacing: 1) {
+                                ForEach(0..<24, id: \.self) { hour in
+                                    let count = map[wd.calValue]?[hour] ?? 0
+                                    let opacity: Double = count == 0
+                                        ? 0.08
+                                        : max(0.2, Double(count) / Double(maxC))
+                                    RoundedRectangle(cornerRadius: 2)
+                                        .fill(Color.accentColor.opacity(opacity))
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 10)
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(8)
+            }
+        } label: {
+            Text(title).unredacted()
+        }
+    }
+}
+
+// MARK: - Previews
+
+#Preview {
+    HeatmapWidgetView(
+        title: "Usage by Time",
+        data: {
+            var entries: [(weekday: Int, hour: Int, count: Int)] = []
+            // Simulate heavier weekday usage during business hours
+            for wd in 2...6 {
+                for hr in 9...17 {
+                    entries.append((weekday: wd, hour: hr, count: Int.random(in: 1...10)))
+                }
+            }
+            entries.append((weekday: 1, hour: 20, count: 3)) // occasional Sunday evening
+            return entries
+        }()
+    )
+    .frame(width: 300)
+    .padding()
+}
+
+#Preview("Empty") {
+    HeatmapWidgetView(title: "Usage by Time", data: [])
+        .frame(width: 300)
+        .padding()
+}
+
+#Preview("Loading") {
+    HeatmapWidgetView(title: "Usage by Time", data: [])
+        .redacted(reason: .placeholder)
+        .frame(width: 300)
+        .padding()
+}

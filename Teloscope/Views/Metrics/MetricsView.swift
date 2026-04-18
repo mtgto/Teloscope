@@ -65,6 +65,7 @@ struct MetricsView: View {
                 approvalWidget(m)
                 modelWidget(m)
                 toolRankingWidget(m)
+                usageHeatmapWidget(m)
                 tokensTimelineWidget(m)
                 costTimelineWidget(m)
                 requestsTimelineWidget(m)
@@ -171,6 +172,13 @@ struct MetricsView: View {
             yAxisLabel: String(localized: "requests"),
             granularity: m?.timeGranularity ?? .hourly,
             xDomain: dateRange.start...dateRange.end
+        )
+    }
+
+    private func usageHeatmapWidget(_ m: MetricsSummary?) -> some View {
+        HeatmapWidgetView(
+            title: "Usage by Time",
+            data: m?.usageHeatmap ?? []
         )
     }
 
