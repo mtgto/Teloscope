@@ -15,7 +15,8 @@ struct MetricsView: View {
             FilterBarView(
                 availableModels: dashboardModel.availableModels,
                 dateRange: $dateRange,
-                selectedModels: $selectedModels
+                selectedModels: $selectedModels,
+                isLoading: dashboardModel.isLoading
             )
             .background(.bar)
             Divider()
@@ -37,13 +38,6 @@ struct MetricsView: View {
             }
         }
         .navigationTitle("Metrics")
-        .toolbar {
-            ToolbarItem(placement: .automatic) {
-                if dashboardModel.isLoading, dashboardModel.metrics != nil {
-                    ProgressView().controlSize(.small)
-                }
-            }
-        }
         .onAppear { refresh() }
         .onChange(of: dateRange)      { refresh() }
         .onChange(of: selectedModels) { refresh() }

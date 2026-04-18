@@ -5,6 +5,7 @@ struct FilterBarView: View {
     let availableModels: [String]
     @Binding var dateRange: DateInterval
     @Binding var selectedModels: Set<String>
+    var isLoading: Bool = false
 
     @State private var activePreset: Preset? = .sevenDays
     @State private var showCustomPicker = false
@@ -40,6 +41,9 @@ struct FilterBarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
+                ProgressView()
+                    .controlSize(.small)
+                    .opacity(isLoading ? 1 : 0)
                 Picker("", selection: $activePreset) {
                     ForEach(Preset.allCases, id: \.self) { preset in
                         Text(preset.rawValue).tag(Optional(preset))
