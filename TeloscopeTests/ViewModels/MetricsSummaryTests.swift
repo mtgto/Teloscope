@@ -72,4 +72,52 @@ struct MetricsSummaryTests {
         let summary = MetricsSummary(spans: spans, dateRange: fullRange)
         #expect(summary.toolRanking.isEmpty)
     }
+
+    // MARK: - usageHeatmap
+
+    @Test func usageHeatmapBucketsLLMRequestsByWeekdayAndHour() {
+        // wednesday14h is Wednesday. Verify weekday is 4 (Wed) in Calendar.current.
+        // Calendar.weekday: 1=Sun, 2=Mon, 3=Tue, 4=Wed, 5=Thu, 6=Fri, 7=Sat
+        let expectedWeekday = Calendar.current.component(.weekday, from: wednesday14h)
+        let expectedHour    = Calendar.current.component(.hour,    from: wednesday14h)
+
+        let spans = [
+            snap("claude_code.llm_request", at: wednesday14h),
+            snap("claude_code.llm_request", at: wednesday14h),
+        ]
+        let summary = MetricsSummary(spans: spans, dateRange: fullRange)
+        let entry = summary.usageHeatmap.first(where: {
+            $0.weekday == expectedWeekday && $0.hour == expectedHour
+        })
+        #expect(entry?.count == 2)
+    }
+
+    @Test func usageHeatmapIgnoresNonLLMSpans() {
+        let spans = [
+            snap("claude_code.tool.bash",   at: wednesday14h),
+            snap("claude_code.llm_request", at: wednesday14h),
+        ]
+        let summary = MetricsSummary(spans: spans, dateRange: fullRange)
+        let total = summary.usageHeatmap.reduce(0) { $0 + $1.count }
+        #expect(total == 1)
+    }
+
+    @Test func usageHeatmapEmptyWhenNoLLMSpans() {
+        let spans = [snap("claude_code.tool.bash")]
+        let summary = MetricsSummary(spans: spans, dateRange: fullRange)
+        #expect(summary.usageHeatmap.isEmpty)
+    }
+
+    @Test func usageHeatmapAccumulatesAcrossDays() {
+        // Two different days at the same hour should land in different weekday buckets.
+        let day1 = wednesday14h                              // Wednesday
+        let day2 = wednesday14h.addingTimeInterval(86400)   // Thursday
+        let spans = [
+            snap("claude_code.llm_request", at: day1),
+            snap("claude_code.llm_request", at: day2),
+        ]
+        let summary = MetricsSummary(spans: spans, dateRange: fullRange)
+        #expect(summary.usageHeatmap.count == 2)
+        #expect(summary.usageHeatmap.allSatisfy { $0.count == 1 })
+    }
 }

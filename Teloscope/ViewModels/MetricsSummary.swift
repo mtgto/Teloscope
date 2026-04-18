@@ -57,6 +57,7 @@ struct MetricsSummary {
     let hasApprovalData: Bool
     let modelDistribution: [(model: String, requestCount: Int)]
     let toolRanking: [(name: String, count: Int)]
+    let usageHeatmap: [(weekday: Int, hour: Int, count: Int)]
     let timeGranularity: TimeGranularity
     let hourlyTokens: [(date: Date, input: Double, output: Double)]
     let hourlyCost: [(date: Date, value: Double)]
@@ -79,6 +80,7 @@ struct MetricsSummary {
         var hasDecisions = false
         var modelCounts: [String: Int] = [:]
         var toolCounts: [String: Int] = [:]
+        var heatCounts: [Int: [Int: Int]] = [:]
 
         for span in spans {
             if let sid = span.sessionId { sessionIds.insert(sid) }
@@ -87,6 +89,9 @@ struct MetricsSummary {
                 inputTokens     += span.inputTokens
                 outputTokens    += span.outputTokens
                 cacheReadTokens += span.cacheReadTokens
+                let wd = Calendar.current.component(.weekday, from: span.startTime)
+                let hr = Calendar.current.component(.hour,    from: span.startTime)
+                heatCounts[wd, default: [:]][hr, default: 0] += 1
                 if let model = span.model {
                     modelCounts[model, default: 0] += 1
                     if let p = ModelPricing.pricing(for: model) {
@@ -124,6 +129,9 @@ struct MetricsSummary {
         self.toolRanking = toolCounts
             .sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
             .map { (name: $0.key, count: $0.value) }
+        self.usageHeatmap = heatCounts.flatMap { wd, hours in
+            hours.map { hr, cnt in (weekday: wd, hour: hr, count: cnt) }
+        }
 
         // Build time series data bucketed by granularity
         let granularity = TimeGranularity.from(dateRange: dateRange)
