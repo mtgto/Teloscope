@@ -10,27 +10,15 @@ struct SettingsView: View {
         @Bindable var settings = settings
         Form {
             Section("Server") {
-                HStack {
-                    Text("Port")
-                    Spacer()
-                    TextField("4318", text: $portText)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 80)
-                        .onSubmit { applyPort() }
-                        .onChange(of: portText) { applyPort() }
-                }
+                TextField("Port", text: $portText, prompt: Text("4318"))
+                    .onSubmit { applyPort() }
+                    .onChange(of: portText) { applyPort() }
                 Toggle("Start server on app launch", isOn: $settings.autoStart)
                     .onChange(of: settings.autoStart) { settings.save() }
             }
             Section("Data") {
-                HStack {
-                    Text("Retention (days)")
-                    Spacer()
-                    TextField("180", value: $settings.retentionDays, format: .number)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 80)
-                        .onChange(of: settings.retentionDays) { settings.save() }
-                }
+                TextField("Retention (days)", value: $settings.retentionDays, format: .number, prompt: Text("180"))
+                    .onChange(of: settings.retentionDays) { settings.save() }
             }
         }
         .formStyle(.grouped)
