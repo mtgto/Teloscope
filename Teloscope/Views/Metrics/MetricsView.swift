@@ -64,31 +64,51 @@ struct MetricsView: View {
     private var skeletonGrid: some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 12) {
-                StatWidgetView(title: "Total Cost", primaryValue: "$0.0000", rows: [])
-                StatWidgetView(
-                    title: "Total Tokens", primaryValue: "000,000",
-                    rows: [
-                        (label: "Input",      value: "000,000"),
-                        (label: "Output",     value: "000,000"),
-                        (label: "Cache Read", value: "000,000"),
-                    ]
-                )
-                StatWidgetView(title: "Sessions", primaryValue: "00", rows: [])
-                PieWidgetView(
-                    title: "Approval Rate",
-                    slices: [PieSlice(label: "Loading", value: 1, color: .gray.opacity(0.3))],
-                    centerLabel: nil
-                )
-                PieWidgetView(
-                    title: "Model Distribution",
-                    slices: [PieSlice(label: "Loading", value: 1, color: .gray.opacity(0.3))],
-                    centerLabel: nil
-                )
+                GroupBox { skeletonSingleValue.redacted(reason: .placeholder) } label: { Text("Total Cost") }
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("000,000")
+                            .font(.title2.monospacedDigit()).fontWeight(.semibold)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Divider()
+                        ForEach(["Input", "Output", "Cache Read"], id: \.self) { label in
+                            HStack {
+                                Text(label).foregroundStyle(.secondary).font(.caption)
+                                Spacer()
+                                Text("000,000").font(.caption.monospacedDigit())
+                            }
+                        }
+                    }
+                    .redacted(reason: .placeholder)
+                } label: { Text("Total Tokens") }
+                GroupBox { skeletonSingleValue.redacted(reason: .placeholder) } label: { Text("Sessions") }
+                GroupBox { skeletonPie(rows: 2).redacted(reason: .placeholder) } label: { Text("Approval Rate") }
+                GroupBox { skeletonPie(rows: 2).redacted(reason: .placeholder) } label: { Text("Model Distribution") }
             }
             .padding(12)
         }
-        .redacted(reason: .placeholder)
         .allowsHitTesting(false)
+    }
+
+    private func skeletonPie(rows: Int) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            Circle().fill(.gray.opacity(0.3)).frame(width: 80, height: 80)
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(0..<rows, id: \.self) { _ in
+                    HStack(spacing: 4) {
+                        Circle().frame(width: 8, height: 8)
+                        Text("placeholder label").font(.caption).lineLimit(1)
+                    }
+                }
+            }
+            Spacer()
+        }
+    }
+
+    private var skeletonSingleValue: some View {
+        Text("000")
+            .font(.title.monospacedDigit()).fontWeight(.semibold)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
     private func costWidget(_ m: MetricsSummary) -> some View {
