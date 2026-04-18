@@ -129,9 +129,10 @@ struct MetricsSummary {
         self.toolRanking = toolCounts
             .sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
             .map { (name: $0.key, count: $0.value) }
-        self.usageHeatmap = heatCounts.flatMap { wd, hours in
+        let heatmapEntries = heatCounts.flatMap { wd, hours in
             hours.map { hr, cnt in (weekday: wd, hour: hr, count: cnt) }
-        }.sorted { lhs, rhs in
+        }
+        self.usageHeatmap = heatmapEntries.sorted { lhs, rhs in
             lhs.weekday != rhs.weekday ? lhs.weekday < rhs.weekday : lhs.hour < rhs.hour
         }
 
