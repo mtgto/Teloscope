@@ -3,7 +3,7 @@ import SwiftUI
 import SwiftData
 
 struct MetricsView: View {
-    @Query(sort: \OTLPSpan.startTime, order: .reverse) private var allSpans: [OTLPSpan]
+    @Environment(\.modelContext) private var modelContext
     @State private var dashboardModel = MetricsDashboardModel()
     @State private var dateRange: DateInterval = MetricsDashboardModel.defaultDateRange()
     @State private var selectedModels: Set<String> = []
@@ -45,13 +45,21 @@ struct MetricsView: View {
             }
         }
         .onAppear { refresh() }
-        .onChange(of: allSpans)       { refresh() }
         .onChange(of: dateRange)      { refresh() }
         .onChange(of: selectedModels) { refresh() }
+        .task {
+            for await _ in NotificationCenter.default.notifications(named: .otlpSpansIngested) {
+                refresh()
+            }
+        }
     }
 
     private func refresh() {
-        dashboardModel.update(spans: allSpans, dateRange: dateRange, selectedModels: selectedModels)
+        dashboardModel.refresh(
+            container: modelContext.container,
+            dateRange: dateRange,
+            selectedModels: selectedModels
+        )
     }
 
     private func metricsGrid(_ m: MetricsSummary?) -> some View {

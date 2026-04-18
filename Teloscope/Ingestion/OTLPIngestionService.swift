@@ -28,7 +28,12 @@ final class OTLPIngestionService {
             rs.scopeSpans = rsProto.scopeSpans.map { ssProto in
                 let ss = ScopeSpans(scopeName: ssProto.scope.name, scopeVersion: ssProto.scope.version)
                 ss.spans = ssProto.spans.map { sProto in
-                    OTLPSpan(
+                    // Build a temporary dictionary for O(1) attribute lookup during construction.
+                    let attrs = Dictionary(
+                        sProto.attributes.map { ($0.key, AttributeValue(anyValue: $0.value)) },
+                        uniquingKeysWith: { first, _ in first }
+                    )
+                    return OTLPSpan(
                         traceId: sProto.traceID.hexString,
                         spanId: sProto.spanID.hexString,
                         parentSpanId: sProto.parentSpanID.isEmpty ? nil : sProto.parentSpanID.hexString,
@@ -37,9 +42,13 @@ final class OTLPIngestionService {
                         startTime: Date(unixNano: sProto.startTimeUnixNano),
                         endTime: Date(unixNano: sProto.endTimeUnixNano),
                         status: OTLPSpanStatus(protoCode: sProto.status.code),
-                        attributes: sProto.attributes.map {
-                            SpanAttribute(key: $0.key, value: AttributeValue(anyValue: $0.value))
-                        }
+                        attributes: attrs.map { SpanAttribute(key: $0.key, value: $0.value) },
+                        sessionId: attrs["session.id"]?.stringValue,
+                        model: attrs["model"]?.stringValue,
+                        inputTokens: attrs["input_tokens"]?.int64Value,
+                        outputTokens: attrs["output_tokens"]?.int64Value,
+                        cacheReadTokens: attrs["cache_read_tokens"]?.int64Value,
+                        decision: attrs["decision"]?.stringValue
                     )
                 }
                 return ss
@@ -47,6 +56,7 @@ final class OTLPIngestionService {
             modelContext.insert(rs)
         }
         try? modelContext.save()
+        NotificationCenter.default.post(name: .otlpSpansIngested, object: nil)
     }
 
     private func ingestMetrics(_ data: Data) {
@@ -64,7 +74,15 @@ final class OTLPIngestionService {
         let predicate = #Predicate<OTLPSpan> { $0.startTime < cutoff }
         try? modelContext.delete(model: OTLPSpan.self, where: predicate)
         try? modelContext.save()
+        NotificationCenter.default.post(name: .otlpSpansIngested, object: nil)
     }
+}
+
+// MARK: - Notifications
+
+extension Notification.Name {
+    /// Posted on the main thread after OTLP span data is saved or deleted.
+    static let otlpSpansIngested = Notification.Name("com.teloscope.otlpSpansIngested")
 }
 
 // MARK: - Private helpers

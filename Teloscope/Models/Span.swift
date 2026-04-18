@@ -8,6 +8,9 @@ enum AttributeValue: Codable, Equatable {
     case double(Double)
     case bool(Bool)
     case stringArray([String])
+
+    var stringValue: String? { if case .string(let v) = self { return v }; return nil }
+    var int64Value: Int64?   { if case .int64(let v)  = self { return v }; return nil }
 }
 
 enum OTLPSpanKind: Int, Codable {
@@ -55,6 +58,15 @@ final class OTLPSpan {
     @Relationship(deleteRule: .cascade)
     var attributes: [SpanAttribute]
 
+    // Typed columns for known Claude Code attributes.
+    // Stored as native SwiftData types to avoid JSON decoding and N+1 relationship faults.
+    var sessionId: String?
+    var model: String?
+    var inputTokens: Int64?
+    var outputTokens: Int64?
+    var cacheReadTokens: Int64?
+    var decision: String?
+
     var kind: OTLPSpanKind { OTLPSpanKind(rawValue: kindRaw) ?? .unspecified }
     var status: OTLPSpanStatus { OTLPSpanStatus(rawValue: statusRaw) ?? .unset }
 
@@ -67,7 +79,13 @@ final class OTLPSpan {
         startTime: Date,
         endTime: Date,
         status: OTLPSpanStatus = .unset,
-        attributes: [SpanAttribute] = []
+        attributes: [SpanAttribute] = [],
+        sessionId: String? = nil,
+        model: String? = nil,
+        inputTokens: Int64? = nil,
+        outputTokens: Int64? = nil,
+        cacheReadTokens: Int64? = nil,
+        decision: String? = nil
     ) {
         self.traceId = traceId
         self.spanId = spanId
@@ -78,5 +96,11 @@ final class OTLPSpan {
         self.endTime = endTime
         self.statusRaw = status.rawValue
         self.attributes = attributes
+        self.sessionId = sessionId
+        self.model = model
+        self.inputTokens = inputTokens
+        self.outputTokens = outputTokens
+        self.cacheReadTokens = cacheReadTokens
+        self.decision = decision
     }
 }

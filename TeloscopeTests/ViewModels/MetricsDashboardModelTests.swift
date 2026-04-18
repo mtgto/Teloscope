@@ -16,29 +16,26 @@ private func makeContainer() throws -> ModelContainer {
 struct MetricsDashboardModelTests {
     private let now = Date(timeIntervalSince1970: 1_000_000)
 
+    private var dateRange: DateInterval {
+        DateInterval(start: now.addingTimeInterval(-1), end: now.addingTimeInterval(1))
+    }
+
+    private func makeSummary(spans: [OTLPSpan]) -> MetricsSummary {
+        MetricsSummary(spans: spans.map { SpanSnapshot($0) }, dateRange: dateRange)
+    }
+
     @Test func tokenTotalsAreSummed() throws {
         let ctx = ModelContext(try makeContainer())
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1",
             name: "claude_code.llm_request",
             startTime: now, endTime: now.addingTimeInterval(1),
-            attributes: [
-                SpanAttribute(key: "input_tokens",      value: .int64(100)),
-                SpanAttribute(key: "output_tokens",     value: .int64(50)),
-                SpanAttribute(key: "cache_read_tokens", value: .int64(20)),
-                SpanAttribute(key: "model",             value: .string("claude-opus-4")),
-            ]))
+            model: "claude-opus-4", inputTokens: 100, outputTokens: 50, cacheReadTokens: 20))
         ctx.insert(OTLPSpan(traceId: "t2", spanId: "s2",
             name: "claude_code.llm_request",
             startTime: now, endTime: now.addingTimeInterval(1),
-            attributes: [
-                SpanAttribute(key: "input_tokens",      value: .int64(200)),
-                SpanAttribute(key: "output_tokens",     value: .int64(80)),
-                SpanAttribute(key: "cache_read_tokens", value: .int64(10)),
-                SpanAttribute(key: "model",             value: .string("claude-sonnet-4")),
-            ]))
+            model: "claude-sonnet-4", inputTokens: 200, outputTokens: 80, cacheReadTokens: 10))
         try ctx.save()
-        let spans = try ctx.fetch(FetchDescriptor<OTLPSpan>())
-        let s = MetricsSummary(spans: spans)
+        let s = makeSummary(spans: try ctx.fetch(FetchDescriptor<OTLPSpan>()))
         #expect(s.totalInputTokens == 300)
         #expect(s.totalOutputTokens == 130)
         #expect(s.totalCacheReadTokens == 30)
@@ -46,23 +43,21 @@ struct MetricsDashboardModelTests {
 
     @Test func sessionCountDeduplicates() throws {
         let ctx = ModelContext(try makeContainer())
-        // Two spans same session
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1",
             name: "claude_code.llm_request",
             startTime: now, endTime: now.addingTimeInterval(1),
-            attributes: [SpanAttribute(key: "session.id", value: .string("A"))]))
+            sessionId: "A"))
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s2",
             name: "claude_code.tool",
             startTime: now, endTime: now.addingTimeInterval(1),
-            attributes: [SpanAttribute(key: "session.id", value: .string("A"))]))
-        // One span different session
+            sessionId: "A"))
         ctx.insert(OTLPSpan(traceId: "t2", spanId: "s3",
             name: "claude_code.llm_request",
             startTime: now, endTime: now.addingTimeInterval(1),
-            attributes: [SpanAttribute(key: "session.id", value: .string("B"))]))
+            sessionId: "B"))
         try ctx.save()
         let spans = try ctx.fetch(FetchDescriptor<OTLPSpan>())
-        #expect(MetricsSummary(spans: spans).sessionCount == 2)
+        #expect(makeSummary(spans: spans).sessionCount == 2)
     }
 
     @Test func approvalRateCalculated() throws {
@@ -70,13 +65,13 @@ struct MetricsDashboardModelTests {
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1",
             name: "claude_code.tool.blocked_on_user",
             startTime: now, endTime: now.addingTimeInterval(1),
-            attributes: [SpanAttribute(key: "decision", value: .string("accept"))]))
+            decision: "accept"))
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s2",
             name: "claude_code.tool.blocked_on_user",
             startTime: now, endTime: now.addingTimeInterval(1),
-            attributes: [SpanAttribute(key: "decision", value: .string("reject"))]))
+            decision: "reject"))
         try ctx.save()
-        let s = MetricsSummary(spans: try ctx.fetch(FetchDescriptor<OTLPSpan>()))
+        let s = makeSummary(spans: try ctx.fetch(FetchDescriptor<OTLPSpan>()))
         #expect(s.hasApprovalData)
         #expect(s.approvalCount == 1)
         #expect(s.rejectionCount == 1)
@@ -87,23 +82,23 @@ struct MetricsDashboardModelTests {
         let ctx = ModelContext(try makeContainer())
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1",
             name: "claude_code.llm_request",
-            startTime: now, endTime: now.addingTimeInterval(1), attributes: []))
+            startTime: now, endTime: now.addingTimeInterval(1)))
         try ctx.save()
-        let s = MetricsSummary(spans: try ctx.fetch(FetchDescriptor<OTLPSpan>()))
+        let s = makeSummary(spans: try ctx.fetch(FetchDescriptor<OTLPSpan>()))
         #expect(!s.hasApprovalData)
         #expect(s.approvalRate == nil)
     }
 
     @Test func modelDistributionSortedByCount() throws {
         let ctx = ModelContext(try makeContainer())
-        for (id, model) in [("s1","claude-opus-4"), ("s2","claude-sonnet-4"), ("s3","claude-sonnet-4")] {
+        for (id, model) in [("s1", "claude-opus-4"), ("s2", "claude-sonnet-4"), ("s3", "claude-sonnet-4")] {
             ctx.insert(OTLPSpan(traceId: "t1", spanId: id,
                 name: "claude_code.llm_request",
                 startTime: now, endTime: now.addingTimeInterval(1),
-                attributes: [SpanAttribute(key: "model", value: .string(model))]))
+                model: model))
         }
         try ctx.save()
-        let s = MetricsSummary(spans: try ctx.fetch(FetchDescriptor<OTLPSpan>()))
+        let s = makeSummary(spans: try ctx.fetch(FetchDescriptor<OTLPSpan>()))
         #expect(s.modelDistribution.count == 2)
         #expect(s.modelDistribution[0].model == "claude-sonnet-4")
         #expect(s.modelDistribution[0].requestCount == 2)
@@ -114,14 +109,9 @@ struct MetricsDashboardModelTests {
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1",
             name: "claude_code.llm_request",
             startTime: now, endTime: now.addingTimeInterval(1),
-            attributes: [
-                SpanAttribute(key: "input_tokens",      value: .int64(1_000_000)),
-                SpanAttribute(key: "output_tokens",     value: .int64(0)),
-                SpanAttribute(key: "cache_read_tokens", value: .int64(0)),
-                SpanAttribute(key: "model",             value: .string("claude-opus-4")),
-            ]))
+            model: "claude-opus-4", inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0))
         try ctx.save()
-        let s = MetricsSummary(spans: try ctx.fetch(FetchDescriptor<OTLPSpan>()))
+        let s = makeSummary(spans: try ctx.fetch(FetchDescriptor<OTLPSpan>()))
         #expect(abs(s.totalCostUSD - 15.0) < 0.001)
     }
 
@@ -130,14 +120,9 @@ struct MetricsDashboardModelTests {
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1",
             name: "claude_code.llm_request",
             startTime: now, endTime: now.addingTimeInterval(1),
-            attributes: [
-                SpanAttribute(key: "input_tokens", value: .int64(1_000_000)),
-                SpanAttribute(key: "output_tokens", value: .int64(0)),
-                SpanAttribute(key: "cache_read_tokens", value: .int64(0)),
-                SpanAttribute(key: "model", value: .string("unknown-model")),
-            ]))
+            model: "unknown-model", inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0))
         try ctx.save()
-        let s = MetricsSummary(spans: try ctx.fetch(FetchDescriptor<OTLPSpan>()))
+        let s = makeSummary(spans: try ctx.fetch(FetchDescriptor<OTLPSpan>()))
         #expect(s.totalCostUSD == 0.0)
     }
 }

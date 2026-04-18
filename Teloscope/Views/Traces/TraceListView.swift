@@ -133,13 +133,7 @@ struct TraceListView: View {
 
     private func sessionId(for spans: [OTLPSpan]) -> String {
         let preferred = spans.first { $0.parentSpanId == nil } ?? spans[0]
-        for span in ([preferred] + spans) {
-            if let attr = span.attributes.first(where: { $0.key == "session.id" }),
-               case .string(let value) = attr.value {
-                return value
-            }
-        }
-        return "unknown"
+        return preferred.sessionId ?? spans.compactMap(\.sessionId).first ?? "unknown"
     }
 
     private var sessionList: some View {

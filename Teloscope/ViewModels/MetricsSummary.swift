@@ -1,6 +1,30 @@
 // SPDX-License-Identifier: MIT
 import Foundation
 
+/// Lightweight, Sendable snapshot of an OTLPSpan used for off-main-thread computation.
+/// Uses the typed columns on OTLPSpan directly — no JSON decoding, no relationship faults.
+struct SpanSnapshot: Sendable {
+    let name: String
+    let startTime: Date
+    let sessionId: String?
+    let model: String?
+    let inputTokens: Int64
+    let outputTokens: Int64
+    let cacheReadTokens: Int64
+    let decision: String?
+
+    init(_ span: OTLPSpan) {
+        name = span.name
+        startTime = span.startTime
+        sessionId = span.sessionId
+        model = span.model
+        inputTokens = span.inputTokens ?? 0
+        outputTokens = span.outputTokens ?? 0
+        cacheReadTokens = span.cacheReadTokens ?? 0
+        decision = span.decision
+    }
+}
+
 enum TimeGranularity {
     case hourly  // date range ≤ 2 days: 1-hour buckets
     case daily   // date range ≤ 30 days: 1-day buckets
@@ -43,7 +67,7 @@ struct MetricsSummary {
         return Double(approvalCount) / Double(total)
     }
 
-    init(spans: [OTLPSpan], dateRange: DateInterval) {
+    init(spans: [SpanSnapshot], dateRange: DateInterval) {
         var costUSD = 0.0
         var inputTokens: Int64 = 0
         var outputTokens: Int64 = 0
@@ -55,25 +79,25 @@ struct MetricsSummary {
         var modelCounts: [String: Int] = [:]
 
         for span in spans {
-            if let sid = Self.stringAttr(span, "session.id") {
-                sessionIds.insert(sid)
-            }
+            if let sid = span.sessionId { sessionIds.insert(sid) }
+
             if span.name.hasPrefix("claude_code.llm_request") {
-                let input     = Self.int64Attr(span, "input_tokens")      ?? 0
-                let output    = Self.int64Attr(span, "output_tokens")     ?? 0
-                let cacheRead = Self.int64Attr(span, "cache_read_tokens") ?? 0
-                inputTokens     += input
-                outputTokens    += output
-                cacheReadTokens += cacheRead
-                if let model = Self.stringAttr(span, "model") {
+                inputTokens     += span.inputTokens
+                outputTokens    += span.outputTokens
+                cacheReadTokens += span.cacheReadTokens
+                if let model = span.model {
                     modelCounts[model, default: 0] += 1
                     if let p = ModelPricing.pricing(for: model) {
-                        costUSD += p.cost(inputTokens: input, outputTokens: output, cacheReadTokens: cacheRead)
+                        costUSD += p.cost(
+                            inputTokens: span.inputTokens,
+                            outputTokens: span.outputTokens,
+                            cacheReadTokens: span.cacheReadTokens
+                        )
                     }
                 }
             } else if span.name.hasPrefix("claude_code.tool.blocked_on_user") {
                 hasDecisions = true
-                switch Self.stringAttr(span, "decision")?.lowercased() {
+                switch span.decision?.lowercased() {
                 case "accept": approved += 1
                 case "reject": rejected += 1
                 default: break
@@ -104,15 +128,16 @@ struct MetricsSummary {
 
         for span in spans where span.name.hasPrefix("claude_code.llm_request") {
             guard let bucketStart = cal.dateInterval(of: component, for: span.startTime)?.start else { continue }
-            let input     = Double(Self.int64Attr(span, "input_tokens")  ?? 0)
-            let output    = Double(Self.int64Attr(span, "output_tokens") ?? 0)
-            let cacheRead = Self.int64Attr(span, "cache_read_tokens")     ?? 0
+            let input  = Double(span.inputTokens)
+            let output = Double(span.outputTokens)
             let existing = tokenBuckets[bucketStart] ?? (input: 0, output: 0)
             tokenBuckets[bucketStart] = (input: existing.input + input, output: existing.output + output)
             requestBuckets[bucketStart, default: 0] += 1
-            if let model = Self.stringAttr(span, "model"), let p = ModelPricing.pricing(for: model) {
+            if let model = span.model, let p = ModelPricing.pricing(for: model) {
                 costBuckets[bucketStart, default: 0] += p.cost(
-                    inputTokens: Int64(input), outputTokens: Int64(output), cacheReadTokens: cacheRead
+                    inputTokens: span.inputTokens,
+                    outputTokens: span.outputTokens,
+                    cacheReadTokens: span.cacheReadTokens
                 )
             }
         }
@@ -139,15 +164,5 @@ struct MetricsSummary {
         self.hourlyRequests = allBucketDates.compactMap { date in
             requestBuckets[date].map { (date: date, value: $0) }
         }
-    }
-
-    private static func int64Attr(_ span: OTLPSpan, _ key: String) -> Int64? {
-        guard case .int64(let v) = span.attributes.first(where: { $0.key == key })?.value else { return nil }
-        return v
-    }
-
-    private static func stringAttr(_ span: OTLPSpan, _ key: String) -> String? {
-        guard case .string(let v) = span.attributes.first(where: { $0.key == key })?.value else { return nil }
-        return v
     }
 }

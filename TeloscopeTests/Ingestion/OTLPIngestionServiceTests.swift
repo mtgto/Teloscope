@@ -56,6 +56,83 @@ struct OTLPIngestionServiceTests {
         #expect(spans[0].attributes.first?.value == .string("GET"))
     }
 
+    @Test func ingestPopulatesTypedColumnsForClaudeCodeSpan() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: context)
+
+        var spanProto = Opentelemetry_Proto_Trace_V1_Span()
+        spanProto.traceID = Data(repeating: 0x01, count: 16)
+        spanProto.spanID = Data(repeating: 0x02, count: 8)
+        spanProto.name = "claude_code.llm_request"
+        spanProto.startTimeUnixNano = 1_000_000_000
+        spanProto.endTimeUnixNano = 2_000_000_000
+
+        func kv(_ key: String, string value: String) -> Opentelemetry_Proto_Common_V1_KeyValue {
+            var kv = Opentelemetry_Proto_Common_V1_KeyValue()
+            kv.key = key; kv.value.stringValue = value; return kv
+        }
+        func kv(_ key: String, int value: Int64) -> Opentelemetry_Proto_Common_V1_KeyValue {
+            var kv = Opentelemetry_Proto_Common_V1_KeyValue()
+            kv.key = key; kv.value.intValue = value; return kv
+        }
+        spanProto.attributes = [
+            kv("session.id",          string: "sess-abc"),
+            kv("model",               string: "claude-opus-4"),
+            kv("input_tokens",        int:    1000),
+            kv("output_tokens",       int:    500),
+            kv("cache_read_tokens",   int:    200),
+        ]
+
+        var scopeSpans = Opentelemetry_Proto_Trace_V1_ScopeSpans()
+        scopeSpans.spans = [spanProto]
+        var resourceSpans = Opentelemetry_Proto_Trace_V1_ResourceSpans()
+        resourceSpans.scopeSpans = [scopeSpans]
+        var request = Opentelemetry_Proto_Collector_Trace_V1_ExportTraceServiceRequest()
+        request.resourceSpans = [resourceSpans]
+
+        service.ingest(.traces(try request.serializedData()))
+
+        let spans = try context.fetch(FetchDescriptor<OTLPSpan>())
+        #expect(spans.count == 1)
+        let span = spans[0]
+        #expect(span.sessionId == "sess-abc")
+        #expect(span.model == "claude-opus-4")
+        #expect(span.inputTokens == 1000)
+        #expect(span.outputTokens == 500)
+        #expect(span.cacheReadTokens == 200)
+    }
+
+    @Test func ingestPopulatesDecisionForToolSpan() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: context)
+
+        var spanProto = Opentelemetry_Proto_Trace_V1_Span()
+        spanProto.traceID = Data(repeating: 0x01, count: 16)
+        spanProto.spanID = Data(repeating: 0x02, count: 8)
+        spanProto.name = "claude_code.tool.blocked_on_user"
+        spanProto.startTimeUnixNano = 1_000_000_000
+        spanProto.endTimeUnixNano = 2_000_000_000
+
+        var decisionAttr = Opentelemetry_Proto_Common_V1_KeyValue()
+        decisionAttr.key = "decision"
+        decisionAttr.value.stringValue = "accept"
+        spanProto.attributes = [decisionAttr]
+
+        var scopeSpans = Opentelemetry_Proto_Trace_V1_ScopeSpans()
+        scopeSpans.spans = [spanProto]
+        var resourceSpans = Opentelemetry_Proto_Trace_V1_ResourceSpans()
+        resourceSpans.scopeSpans = [scopeSpans]
+        var request = Opentelemetry_Proto_Collector_Trace_V1_ExportTraceServiceRequest()
+        request.resourceSpans = [resourceSpans]
+
+        service.ingest(.traces(try request.serializedData()))
+
+        let spans = try context.fetch(FetchDescriptor<OTLPSpan>())
+        #expect(spans[0].decision == "accept")
+    }
+
     @Test func deletesSpansOlderThanRetentionDays() throws {
         let container = try makeContainer()
         let context = ModelContext(container)

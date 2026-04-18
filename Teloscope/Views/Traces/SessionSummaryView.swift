@@ -1,18 +1,6 @@
 // SPDX-License-Identifier: MIT
 import SwiftUI
 
-// MARK: - Attribute helpers
-
-private func int64Attr(_ span: OTLPSpan, _ key: String) -> Int64? {
-    guard case .int64(let v) = span.attributes.first(where: { $0.key == key })?.value else { return nil }
-    return v
-}
-
-private func stringAttr(_ span: OTLPSpan, _ key: String) -> String? {
-    guard case .string(let v) = span.attributes.first(where: { $0.key == key })?.value else { return nil }
-    return v
-}
-
 private func formatDuration(_ seconds: TimeInterval) -> String {
     if seconds >= 3600 {
         let h = Int(seconds / 3600)
@@ -58,20 +46,22 @@ struct SessionSummary {
 
         for span in spans {
             if span.name.hasPrefix("claude_code.llm_request") {
-                inputTokens += int64Attr(span, "input_tokens") ?? 0
-                outputTokens += int64Attr(span, "output_tokens") ?? 0
-                cacheReadTokens += int64Attr(span, "cache_read_tokens") ?? 0
+                inputTokens += span.inputTokens ?? 0
+                outputTokens += span.outputTokens ?? 0
+                cacheReadTokens += span.cacheReadTokens ?? 0
                 llmRequestCount += 1
             } else if span.name.hasPrefix("claude_code.tool.blocked_on_user") {
                 hasDecisionData = true
-                let decision = stringAttr(span, "decision")?.lowercased() ?? ""
+                let decision = span.decision?.lowercased() ?? ""
                 if approvedValues.contains(decision) {
                     approvedCount += 1
                 } else if rejectedValues.contains(decision) {
                     rejectedCount += 1
                 }
             } else if span.name == "claude_code.tool" {
-                if let toolName = stringAttr(span, "tool_name") {
+                // tool_name is not a typed column; fall back to SpanAttribute for display.
+                if let attr = span.attributes.first(where: { $0.key == "tool_name" }),
+                   case .string(let toolName) = attr.value {
                     toolCounts[toolName, default: 0] += 1
                 }
             }
