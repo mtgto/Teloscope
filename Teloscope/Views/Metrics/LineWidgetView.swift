@@ -78,6 +78,7 @@ struct LineWidgetView: View {
                         }
                     }
                 }
+                .padding(8)
             }
         } label: {
             Text(title).unredacted()

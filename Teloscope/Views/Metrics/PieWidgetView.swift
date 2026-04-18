@@ -66,6 +66,7 @@ struct PieWidgetView: View {
                     }
                     Spacer()
                 }
+                .padding(8)
             }
         } label: {
             Text(title).unredacted()

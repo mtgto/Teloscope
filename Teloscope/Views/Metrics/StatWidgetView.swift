@@ -33,6 +33,7 @@ struct StatWidgetView: View {
                 }
             }
             .frame(maxHeight: .infinity)
+            .padding(8)
         } label: {
             Text(title).unredacted()
         }
