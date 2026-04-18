@@ -12,6 +12,7 @@ struct SpanSnapshot: Sendable {
     let outputTokens: Int64
     let cacheReadTokens: Int64
     let decision: String?
+    let toolName: String?
 
     init(_ span: OTLPSpan) {
         name = span.name
@@ -22,6 +23,7 @@ struct SpanSnapshot: Sendable {
         outputTokens = span.outputTokens ?? 0
         cacheReadTokens = span.cacheReadTokens ?? 0
         decision = span.decision
+        toolName = span.toolName
     }
 }
 
@@ -109,9 +111,10 @@ struct MetricsSummary {
                 case "reject": rejected += 1
                 default: break
                 }
-            } else if span.name.hasPrefix("claude_code.tool.") {
-                let toolName = String(span.name.dropFirst("claude_code.tool.".count))
-                toolCounts[toolName, default: 0] += 1
+            } else if span.name == "claude_code.tool" {
+                if let toolName = span.toolName {
+                    toolCounts[toolName, default: 0] += 1
+                }
             }
         }
 

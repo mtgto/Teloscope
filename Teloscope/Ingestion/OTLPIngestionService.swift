@@ -48,7 +48,8 @@ final class OTLPIngestionService {
                         inputTokens: attrs["input_tokens"]?.int64Value,
                         outputTokens: attrs["output_tokens"]?.int64Value,
                         cacheReadTokens: attrs["cache_read_tokens"]?.int64Value,
-                        decision: attrs["decision"]?.stringValue
+                        decision: attrs["decision"]?.stringValue,
+                        toolName: attrs["tool_name"]?.stringValue
                     )
                 }
                 return ss

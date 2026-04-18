@@ -66,6 +66,7 @@ final class OTLPSpan {
     var outputTokens: Int64?
     var cacheReadTokens: Int64?
     var decision: String?
+    var toolName: String?
 
     var kind: OTLPSpanKind { OTLPSpanKind(rawValue: kindRaw) ?? .unspecified }
     var status: OTLPSpanStatus { OTLPSpanStatus(rawValue: statusRaw) ?? .unset }
@@ -85,7 +86,8 @@ final class OTLPSpan {
         inputTokens: Int64? = nil,
         outputTokens: Int64? = nil,
         cacheReadTokens: Int64? = nil,
-        decision: String? = nil
+        decision: String? = nil,
+        toolName: String? = nil
     ) {
         self.traceId = traceId
         self.spanId = spanId
@@ -102,5 +104,6 @@ final class OTLPSpan {
         self.outputTokens = outputTokens
         self.cacheReadTokens = cacheReadTokens
         self.decision = decision
+        self.toolName = toolName
     }
 }

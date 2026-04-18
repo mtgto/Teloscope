@@ -11,11 +11,12 @@ struct MetricsSummaryTests {
     private let wednesday14h = Date(timeIntervalSince1970: 1_704_279_600) // 2024-01-03 13:00 UTC
     private let fullRange = DateInterval(start: .distantPast, end: .distantFuture)
 
-    private func snap(_ name: String, at date: Date = Date()) -> SpanSnapshot {
+    private func snap(_ name: String, at date: Date = Date(), toolName: String? = nil) -> SpanSnapshot {
         SpanSnapshot(OTLPSpan(
             traceId: "t", spanId: UUID().uuidString,
             name: name,
-            startTime: date, endTime: date.addingTimeInterval(1)
+            startTime: date, endTime: date.addingTimeInterval(1),
+            toolName: toolName
         ))
     }
 
@@ -23,9 +24,9 @@ struct MetricsSummaryTests {
 
     @Test func toolRankingCountsToolSpans() {
         let spans = [
-            snap("claude_code.tool.bash"),
-            snap("claude_code.tool.bash"),
-            snap("claude_code.tool.read"),
+            snap("claude_code.tool", toolName: "bash"),
+            snap("claude_code.tool", toolName: "bash"),
+            snap("claude_code.tool", toolName: "read"),
         ]
         let summary = MetricsSummary(spans: spans, dateRange: fullRange)
         #expect(summary.toolRanking.count == 2)
@@ -35,7 +36,7 @@ struct MetricsSummaryTests {
 
     @Test func toolRankingExcludesBlockedOnUser() {
         let spans = [
-            snap("claude_code.tool.bash"),
+            snap("claude_code.tool", toolName: "bash"),
             snap("claude_code.tool.blocked_on_user"),
         ]
         let summary = MetricsSummary(spans: spans, dateRange: fullRange)
@@ -46,7 +47,17 @@ struct MetricsSummaryTests {
     @Test func toolRankingIgnoresNonToolSpans() {
         let spans = [
             snap("claude_code.llm_request"),
-            snap("claude_code.tool.bash"),
+            snap("claude_code.tool", toolName: "bash"),
+        ]
+        let summary = MetricsSummary(spans: spans, dateRange: fullRange)
+        #expect(summary.toolRanking.count == 1)
+        #expect(summary.toolRanking[0].name == "bash")
+    }
+
+    @Test func toolRankingIgnoresToolSpansWithoutToolName() {
+        let spans = [
+            snap("claude_code.tool"),              // no toolName attribute
+            snap("claude_code.tool", toolName: "bash"),
         ]
         let summary = MetricsSummary(spans: spans, dateRange: fullRange)
         #expect(summary.toolRanking.count == 1)
@@ -55,12 +66,12 @@ struct MetricsSummaryTests {
 
     @Test func toolRankingSortedDescending() {
         let spans = [
-            snap("claude_code.tool.read"),
-            snap("claude_code.tool.bash"),
-            snap("claude_code.tool.bash"),
-            snap("claude_code.tool.bash"),
-            snap("claude_code.tool.read"),
-            snap("claude_code.tool.write"),
+            snap("claude_code.tool", toolName: "read"),
+            snap("claude_code.tool", toolName: "bash"),
+            snap("claude_code.tool", toolName: "bash"),
+            snap("claude_code.tool", toolName: "bash"),
+            snap("claude_code.tool", toolName: "read"),
+            snap("claude_code.tool", toolName: "write"),
         ]
         let summary = MetricsSummary(spans: spans, dateRange: fullRange)
         let names = summary.toolRanking.map(\.name)
@@ -75,8 +86,8 @@ struct MetricsSummaryTests {
 
     @Test func toolRankingTieBreaksByNameAlphabetically() {
         let spans = [
-            snap("claude_code.tool.write"),
-            snap("claude_code.tool.bash"),
+            snap("claude_code.tool", toolName: "write"),
+            snap("claude_code.tool", toolName: "bash"),
         ]
         let summary = MetricsSummary(spans: spans, dateRange: fullRange)
         let names = summary.toolRanking.map(\.name)
@@ -104,7 +115,7 @@ struct MetricsSummaryTests {
 
     @Test func usageHeatmapIgnoresNonLLMSpans() {
         let spans = [
-            snap("claude_code.tool.bash",   at: wednesday14h),
+            snap("claude_code.tool", at: wednesday14h, toolName: "bash"),
             snap("claude_code.llm_request", at: wednesday14h),
         ]
         let summary = MetricsSummary(spans: spans, dateRange: fullRange)
@@ -113,7 +124,7 @@ struct MetricsSummaryTests {
     }
 
     @Test func usageHeatmapEmptyWhenNoLLMSpans() {
-        let spans = [snap("claude_code.tool.bash")]
+        let spans = [snap("claude_code.tool", toolName: "bash")]
         let summary = MetricsSummary(spans: spans, dateRange: fullRange)
         #expect(summary.usageHeatmap.isEmpty)
     }
