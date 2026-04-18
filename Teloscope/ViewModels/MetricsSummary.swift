@@ -78,6 +78,7 @@ struct MetricsSummary {
         var rejected = 0
         var hasDecisions = false
         var modelCounts: [String: Int] = [:]
+        var toolCounts: [String: Int] = [:]
 
         for span in spans {
             if let sid = span.sessionId { sessionIds.insert(sid) }
@@ -103,15 +104,10 @@ struct MetricsSummary {
                 case "reject": rejected += 1
                 default: break
                 }
+            } else if span.name.hasPrefix("claude_code.tool.") {
+                let toolName = String(span.name.dropFirst("claude_code.tool.".count))
+                toolCounts[toolName, default: 0] += 1
             }
-        }
-
-        var toolCounts: [String: Int] = [:]
-        for span in spans {
-            guard span.name.hasPrefix("claude_code.tool.") else { continue }
-            let toolName = String(span.name.dropFirst("claude_code.tool.".count))
-            guard toolName != "blocked_on_user" else { continue }
-            toolCounts[toolName, default: 0] += 1
         }
 
         self.totalCostUSD         = costUSD
@@ -126,7 +122,7 @@ struct MetricsSummary {
             .sorted { $0.value > $1.value }
             .map { (model: $0.key, requestCount: $0.value) }
         self.toolRanking = toolCounts
-            .sorted { $0.value > $1.value }
+            .sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
             .map { (name: $0.key, count: $0.value) }
 
         // Build time series data bucketed by granularity
