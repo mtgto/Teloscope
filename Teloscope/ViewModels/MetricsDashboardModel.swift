@@ -13,7 +13,6 @@ final class MetricsDashboardModel {
 
     func update(spans: [OTLPSpan], dateRange: DateInterval, selectedModels: Set<String>) {
         computeTask?.cancel()
-        metrics = nil
         isLoading = true
         computeTask = Task { @MainActor in
             // Yield so SwiftUI renders the loading state before we start computing.
@@ -44,7 +43,7 @@ final class MetricsDashboardModel {
             }
 
             guard !Task.isCancelled else { return }
-            metrics = MetricsSummary(spans: filtered)
+            metrics = MetricsSummary(spans: filtered, dateRange: dateRange)
             isLoading = false
         }
     }

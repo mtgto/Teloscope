@@ -21,9 +21,11 @@ struct MetricsView: View {
             Divider()
             Group {
                 if let m = dashboardModel.metrics, m.sessionCount > 0 || m.totalInputTokens > 0 {
-                    metricsGrid(m, isLoading: false)
+                    metricsGrid(m)
+                        .redacted(reason: dashboardModel.isLoading ? .invalidated : [])
                 } else if dashboardModel.isLoading {
-                    metricsGrid(nil, isLoading: true)
+                    metricsGrid(nil)
+                        .redacted(reason: .placeholder)
                 } else {
                     ContentUnavailableView(
                         "No Data",
@@ -52,30 +54,31 @@ struct MetricsView: View {
         dashboardModel.update(spans: allSpans, dateRange: dateRange, selectedModels: selectedModels)
     }
 
-    private func metricsGrid(_ m: MetricsSummary?, isLoading: Bool) -> some View {
+    private func metricsGrid(_ m: MetricsSummary?) -> some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 12) {
-                costWidget(m, isLoading: isLoading)
-                tokensWidget(m, isLoading: isLoading)
-                sessionsWidget(m, isLoading: isLoading)
-                approvalWidget(m, isLoading: isLoading)
-                modelWidget(m, isLoading: isLoading)
+                costWidget(m)
+                tokensWidget(m)
+                sessionsWidget(m)
+                approvalWidget(m)
+                modelWidget(m)
+                tokensTimelineWidget(m)
+                costTimelineWidget(m)
+                requestsTimelineWidget(m)
             }
             .padding(12)
         }
-        .allowsHitTesting(!isLoading)
     }
 
-    private func costWidget(_ m: MetricsSummary?, isLoading: Bool) -> some View {
+    private func costWidget(_ m: MetricsSummary?) -> some View {
         StatWidgetView(
             title: "Total Cost",
             primaryValue: m?.totalCostUSD.formatted(.currency(code: "USD")) ?? "$0.0000",
-            rows: [],
-            isLoading: isLoading
+            rows: []
         )
     }
 
-    private func tokensWidget(_ m: MetricsSummary?, isLoading: Bool) -> some View {
+    private func tokensWidget(_ m: MetricsSummary?) -> some View {
         let total = m.map { $0.totalInputTokens + $0.totalOutputTokens + $0.totalCacheReadTokens }
         return StatWidgetView(
             title: "Total Tokens",
@@ -84,21 +87,19 @@ struct MetricsView: View {
                 (label: "Input",      value: m?.totalInputTokens.formatted(.number) ?? "000,000"),
                 (label: "Output",     value: m?.totalOutputTokens.formatted(.number) ?? "000,000"),
                 (label: "Cache read", value: m?.totalCacheReadTokens.formatted(.number) ?? "000,000"),
-            ],
-            isLoading: isLoading
+            ]
         )
     }
 
-    private func sessionsWidget(_ m: MetricsSummary?, isLoading: Bool) -> some View {
+    private func sessionsWidget(_ m: MetricsSummary?) -> some View {
         StatWidgetView(
             title: "Sessions",
             primaryValue: m?.sessionCount.formatted(.number) ?? "000",
-            rows: [],
-            isLoading: isLoading
+            rows: []
         )
     }
 
-    private func approvalWidget(_ m: MetricsSummary?, isLoading: Bool) -> some View {
+    private func approvalWidget(_ m: MetricsSummary?) -> some View {
         let slices: [PieSlice]
         let centerLabel: String?
         if let m, m.hasApprovalData {
@@ -114,10 +115,61 @@ struct MetricsView: View {
             ]
             centerLabel = nil
         }
-        return PieWidgetView(title: "Approval Rate", slices: slices, centerLabel: centerLabel, isLoading: isLoading)
+        return PieWidgetView(title: "Approval Rate", slices: slices, centerLabel: centerLabel)
     }
 
-    private func modelWidget(_ m: MetricsSummary?, isLoading: Bool) -> some View {
+    private func tokensTimelineWidget(_ m: MetricsSummary?) -> some View {
+        let granularity = m?.timeGranularity ?? .hourly
+        return LineWidgetView(
+            title: "Tokens Over Time",
+            series: [
+                LineSeries(
+                    label: String(localized: "Input Tokens"),
+                    color: .blue,
+                    dataPoints: m?.hourlyTokens.map { (date: $0.date, value: $0.input) } ?? []
+                ),
+                LineSeries(
+                    label: String(localized: "Output Tokens"),
+                    color: .green,
+                    dataPoints: m?.hourlyTokens.map { (date: $0.date, value: $0.output) } ?? []
+                ),
+            ],
+            yAxisLabel: String(localized: "tokens"),
+            granularity: granularity
+        )
+    }
+
+    private func costTimelineWidget(_ m: MetricsSummary?) -> some View {
+        LineWidgetView(
+            title: "Cost Over Time",
+            series: [
+                LineSeries(
+                    label: String(localized: "Cost"),
+                    color: .orange,
+                    dataPoints: m?.hourlyCost.map { (date: $0.date, value: $0.value) } ?? []
+                ),
+            ],
+            yAxisLabel: "USD",
+            granularity: m?.timeGranularity ?? .hourly
+        )
+    }
+
+    private func requestsTimelineWidget(_ m: MetricsSummary?) -> some View {
+        LineWidgetView(
+            title: "Requests Over Time",
+            series: [
+                LineSeries(
+                    label: String(localized: "Requests"),
+                    color: .purple,
+                    dataPoints: m?.hourlyRequests.map { (date: $0.date, value: $0.value) } ?? []
+                ),
+            ],
+            yAxisLabel: String(localized: "requests"),
+            granularity: m?.timeGranularity ?? .hourly
+        )
+    }
+
+    private func modelWidget(_ m: MetricsSummary?) -> some View {
         let palette: [Color] = [.blue, .orange, .green, .purple, .teal, .pink]
         let slices = m?.modelDistribution.enumerated().map { i, entry in
             PieSlice(
@@ -129,7 +181,7 @@ struct MetricsView: View {
             PieSlice(label: "model-name (0)", value: 1, color: .blue),
             PieSlice(label: "model-name (0)", value: 1, color: .orange),
         ]
-        return PieWidgetView(title: "Model Distribution", slices: slices, centerLabel: nil, isLoading: isLoading)
+        return PieWidgetView(title: "Model Distribution", slices: slices, centerLabel: nil)
     }
 }
 

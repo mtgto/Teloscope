@@ -5,7 +5,6 @@ struct StatWidgetView: View {
     let title: LocalizedStringKey
     let primaryValue: String
     let rows: [(label: String, value: String)]
-    var isLoading: Bool = false
 
     var body: some View {
         GroupBox {
@@ -37,7 +36,6 @@ struct StatWidgetView: View {
         } label: {
             Text(title).unredacted()
         }
-        .redacted(reason: isLoading ? .placeholder : [])
     }
 }
 
@@ -73,9 +71,9 @@ struct StatWidgetView: View {
             (label: "Input", value: "000,000"),
             (label: "Output", value: "000,000"),
             (label: "Cache Read", value: "000,000"),
-        ],
-        isLoading: true
+        ]
     )
+    .redacted(reason: .placeholder)
     .frame(width: 220)
     .padding()
 }

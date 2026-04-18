@@ -14,11 +14,12 @@ struct PieWidgetView: View {
     let slices: [PieSlice]
     /// Short text rendered in the donut hole (e.g. "78%"). Pass nil to omit.
     let centerLabel: String?
-    var isLoading: Bool = false
+
+    @Environment(\.redactionReasons) private var redactionReasons
 
     var body: some View {
         GroupBox {
-            if !isLoading && slices.isEmpty {
+            if !redactionReasons.contains(.placeholder) && slices.isEmpty {
                 Text("No data")
                     .foregroundStyle(.secondary)
                     .font(.caption)
@@ -26,8 +27,9 @@ struct PieWidgetView: View {
                     .padding(.vertical, 8)
             } else {
                 HStack(alignment: .center, spacing: 12) {
-                    // Charts は .redacted に対応していないため、ローディング中は Circle で代替
-                    if isLoading {
+                    // Charts は .redacted に対応していないため、.placeholder 時のみ Circle で代替
+                    // .invalidated 時は実チャートをそのまま表示（親の redaction でぼかされる）
+                    if redactionReasons.contains(.placeholder) {
                         Circle()
                             .fill(.gray.opacity(0.3))
                             .frame(width: 80, height: 80)
@@ -68,7 +70,6 @@ struct PieWidgetView: View {
         } label: {
             Text(title).unredacted()
         }
-        .redacted(reason: isLoading ? .placeholder : [])
     }
 }
 
@@ -92,9 +93,9 @@ struct PieWidgetView: View {
             PieSlice(label: "Approved (\(0))", value: 1, color: .green),
             PieSlice(label: "Rejected (\(0))", value: 1, color: .red),
         ],
-        centerLabel: nil,
-        isLoading: true
+        centerLabel: nil
     )
+    .redacted(reason: .placeholder)
     .frame(width: 260)
     .padding()
 }
