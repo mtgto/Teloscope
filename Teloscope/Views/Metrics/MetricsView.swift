@@ -20,10 +20,7 @@ struct MetricsView: View {
             .background(.bar)
             Divider()
             Group {
-                if dashboardModel.isLoading {
-                    ProgressView("Loading...")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if let m = dashboardModel.metrics, m.sessionCount > 0 || m.totalInputTokens > 0 {
+                if let m = dashboardModel.metrics, m.sessionCount > 0 || m.totalInputTokens > 0 {
                     ScrollView {
                         LazyVGrid(columns: columns, spacing: 12) {
                             costWidget(m)
@@ -34,6 +31,8 @@ struct MetricsView: View {
                         }
                         .padding(12)
                     }
+                } else if dashboardModel.isLoading {
+                    skeletonGrid
                 } else {
                     ContentUnavailableView(
                         "No Data",
@@ -45,6 +44,13 @@ struct MetricsView: View {
             }
         }
         .navigationTitle("Metrics")
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                if dashboardModel.isLoading, dashboardModel.metrics != nil {
+                    ProgressView().controlSize(.small)
+                }
+            }
+        }
         .onAppear { refresh() }
         .onChange(of: allSpans)       { refresh() }
         .onChange(of: dateRange)      { refresh() }
@@ -53,6 +59,36 @@ struct MetricsView: View {
 
     private func refresh() {
         dashboardModel.update(spans: allSpans, dateRange: dateRange, selectedModels: selectedModels)
+    }
+
+    private var skeletonGrid: some View {
+        ScrollView {
+            LazyVGrid(columns: columns, spacing: 12) {
+                StatWidgetView(title: "Total Cost", primaryValue: "$0.0000", rows: [])
+                StatWidgetView(
+                    title: "Total Tokens", primaryValue: "000,000",
+                    rows: [
+                        (label: "Input",      value: "000,000"),
+                        (label: "Output",     value: "000,000"),
+                        (label: "Cache Read", value: "000,000"),
+                    ]
+                )
+                StatWidgetView(title: "Sessions", primaryValue: "00", rows: [])
+                PieWidgetView(
+                    title: "Approval Rate",
+                    slices: [PieSlice(label: "Loading", value: 1, color: .gray.opacity(0.3))],
+                    centerLabel: nil
+                )
+                PieWidgetView(
+                    title: "Model Distribution",
+                    slices: [PieSlice(label: "Loading", value: 1, color: .gray.opacity(0.3))],
+                    centerLabel: nil
+                )
+            }
+            .padding(12)
+        }
+        .redacted(reason: .placeholder)
+        .allowsHitTesting(false)
     }
 
     private func costWidget(_ m: MetricsSummary) -> some View {
