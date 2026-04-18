@@ -4,7 +4,7 @@ import Charts
 
 struct PieSlice: Identifiable {
     let id = UUID()
-    let label: String
+    let label: LocalizedStringKey
     let value: Double
     let color: Color
 }
@@ -50,7 +50,7 @@ struct PieWidgetView: View {
                         .frame(width: 80, height: 80)
                     }
                     VStack(alignment: .leading, spacing: 4) {
-                        ForEach(slices) { slice in
+                        ForEach(slices, id: \.id) { slice in
                             HStack(spacing: 4) {
                                 Circle()
                                     .fill(slice.color)
@@ -76,8 +76,8 @@ struct PieWidgetView: View {
     PieWidgetView(
         title: "Approval Rate",
         slices: [
-            PieSlice(label: "Approved (35)", value: 35, color: .green),
-            PieSlice(label: "Rejected (10)", value: 10, color: .red),
+            PieSlice(label: "Approved (\(35))", value: 35, color: .green),
+            PieSlice(label: "Rejected (\(10))", value: 10, color: .red),
         ],
         centerLabel: "78%"
     )
@@ -89,8 +89,8 @@ struct PieWidgetView: View {
     PieWidgetView(
         title: "Approval Rate",
         slices: [
-            PieSlice(label: "Approved (00)", value: 1, color: .green),
-            PieSlice(label: "Rejected (00)", value: 1, color: .red),
+            PieSlice(label: "Approved (\(0))", value: 1, color: .green),
+            PieSlice(label: "Rejected (\(0))", value: 1, color: .red),
         ],
         centerLabel: nil,
         isLoading: true

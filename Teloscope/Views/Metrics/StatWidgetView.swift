@@ -23,7 +23,7 @@ struct StatWidgetView: View {
                     Divider()
                     ForEach(rows, id: \.label) { row in
                         HStack {
-                            Text(row.label)
+                            Text(LocalizedStringKey(row.label))
                                 .foregroundStyle(.secondary)
                                 .font(.caption)
                             Spacer()

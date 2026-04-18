@@ -83,7 +83,7 @@ struct MetricsView: View {
             rows: [
                 (label: "Input",      value: m?.totalInputTokens.formatted(.number) ?? "000,000"),
                 (label: "Output",     value: m?.totalOutputTokens.formatted(.number) ?? "000,000"),
-                (label: "Cache Read", value: m?.totalCacheReadTokens.formatted(.number) ?? "000,000"),
+                (label: "Cache read", value: m?.totalCacheReadTokens.formatted(.number) ?? "000,000"),
             ],
             isLoading: isLoading
         )
@@ -109,8 +109,8 @@ struct MetricsView: View {
             centerLabel = m.approvalRate.map { "\(Int($0 * 100))%" }
         } else {
             slices = [
-                PieSlice(label: "Approved (00)", value: 1, color: .green),
-                PieSlice(label: "Rejected (00)", value: 1, color: .red),
+                PieSlice(label: "Approved (\(0))", value: 1, color: .green),
+                PieSlice(label: "Rejected (\(0))", value: 1, color: .red),
             ]
             centerLabel = nil
         }
@@ -126,8 +126,8 @@ struct MetricsView: View {
                 color: palette[i % palette.count]
             )
         } ?? [
-            PieSlice(label: "model-name (00)", value: 1, color: .blue),
-            PieSlice(label: "model-name (00)", value: 1, color: .orange),
+            PieSlice(label: "model-name (0)", value: 1, color: .blue),
+            PieSlice(label: "model-name (0)", value: 1, color: .orange),
         ]
         return PieWidgetView(title: "Model Distribution", slices: slices, centerLabel: nil, isLoading: isLoading)
     }
