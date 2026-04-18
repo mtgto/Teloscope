@@ -4,15 +4,22 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(OTLPServer.self) private var server
-    @State private var portText = ""
+
+    private let portFormatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.minimum = 1
+        f.maximum = 65535
+        f.allowsFloats = false
+        f.usesGroupingSeparator = false
+        return f
+    }()
 
     var body: some View {
         @Bindable var settings = settings
         Form {
             Section("Server") {
-                TextField("Port", text: $portText, prompt: Text("4318"))
-                    .onSubmit { applyPort() }
-                    .onChange(of: portText) { applyPort() }
+                TextField("Port", value: $settings.port, formatter: portFormatter, prompt: Text("4318"))
+                    .onChange(of: settings.port) { settings.save() }
                 Toggle("Start server on app launch", isOn: $settings.autoStart)
                     .onChange(of: settings.autoStart) { settings.save() }
             }
@@ -22,16 +29,6 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear {
-            portText = "\(settings.port)"
-        }
-    }
-
-    private func applyPort() {
-        if let port = Int(portText), port > 0, port <= 65535 {
-            settings.port = port
-            settings.save()
-        }
     }
 }
 
