@@ -26,7 +26,7 @@ struct TeloscopeApp: App {
     @State private var server = OTLPServer()
 
     var body: some Scene {
-        WindowGroup {
+        Window("Teloscope", id: "main") {
             MainView()
                 .environment(settings)
                 .environment(server)
