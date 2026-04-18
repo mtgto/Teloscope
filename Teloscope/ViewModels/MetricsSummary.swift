@@ -85,7 +85,7 @@ struct MetricsSummary {
         for span in spans {
             if let sid = span.sessionId { sessionIds.insert(sid) }
 
-            if span.name.hasPrefix("claude_code.llm_request") {
+            if span.name == "claude_code.llm_request" {
                 inputTokens     += span.inputTokens
                 outputTokens    += span.outputTokens
                 cacheReadTokens += span.cacheReadTokens
@@ -145,7 +145,7 @@ struct MetricsSummary {
         var costBuckets: [Date: Double] = [:]
         var requestBuckets: [Date: Double] = [:]
 
-        for span in spans where span.name.hasPrefix("claude_code.llm_request") {
+        for span in spans where span.name == "claude_code.llm_request" {
             guard let bucketStart = cal.dateInterval(of: component, for: span.startTime)?.start else { continue }
             let input  = Double(span.inputTokens)
             let output = Double(span.outputTokens)

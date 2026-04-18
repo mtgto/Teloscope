@@ -73,6 +73,16 @@ struct MetricsSummaryTests {
         #expect(summary.toolRanking.isEmpty)
     }
 
+    @Test func toolRankingTieBreaksByNameAlphabetically() {
+        let spans = [
+            snap("claude_code.tool.write"),
+            snap("claude_code.tool.bash"),
+        ]
+        let summary = MetricsSummary(spans: spans, dateRange: fullRange)
+        let names = summary.toolRanking.map(\.name)
+        #expect(names == ["bash", "write"])
+    }
+
     // MARK: - usageHeatmap
 
     @Test func usageHeatmapBucketsLLMRequestsByWeekdayAndHour() {
