@@ -161,7 +161,7 @@ struct TraceListView: View {
     @ViewBuilder
     private func sessionHeader(_ session: SessionRow) -> some View {
         HStack {
-            Text(session.id == "unknown" ? "Unknown Session" : String(session.id.prefix(16)))
+            Text(session.id == "unknown" ? "Unknown Session" : session.id)
                 .font(.system(.body, design: .monospaced))
                 .fontWeight(.semibold)
             Spacer()
@@ -177,7 +177,7 @@ struct TraceListView: View {
     @ViewBuilder
     private func traceRow(_ trace: TraceRow) -> some View {
         HStack {
-            Text(String(trace.traceId.prefix(16)))
+            Text(trace.traceId)
                 .font(.system(.body, design: .monospaced))
             Spacer()
             Text(trace.rootSpanName)
