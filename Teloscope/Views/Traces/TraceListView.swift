@@ -23,12 +23,21 @@ enum TraceSelection: Hashable {
     case trace(String)
 }
 
+private struct SessionTreeNode: Identifiable {
+    enum Content {
+        case session(SessionRow)
+        case trace(TraceRow)
+    }
+    let id: String
+    let content: Content
+    let children: [SessionTreeNode]?
+}
+
 struct TraceListView: View {
     private let detailPanelMinHeight: CGFloat = 300
 
     @Query(sort: \OTLPSpan.startTime, order: .reverse) private var allSpans: [OTLPSpan]
     @State private var selection: TraceSelection?
-    @State private var expandedSessions: Set<String> = []
     @State private var cachedSessions: [SessionRow] = []
     @State private var selectedSpans: [OTLPSpan] = []
     @State private var isLoadingSelection = false
@@ -142,21 +151,29 @@ struct TraceListView: View {
         return preferred.sessionId ?? spans.compactMap(\.sessionId).first ?? "unknown"
     }
 
+    private var sessionTreeNodes: [SessionTreeNode] {
+        cachedSessions.map { session in
+            SessionTreeNode(
+                id: "session-\(session.id)",
+                content: .session(session),
+                children: session.traces.map { trace in
+                    SessionTreeNode(id: "trace-\(trace.traceId)", content: .trace(trace), children: nil)
+                }
+            )
+        }
+    }
+
     private var sessionList: some View {
         List(selection: $selection) {
-            ForEach(cachedSessions) { session in
-                let isExpanded = Binding(
-                    get: { expandedSessions.contains(session.id) },
-                    set: { if $0 { expandedSessions.insert(session.id) } else { expandedSessions.remove(session.id) } }
-                )
-                DisclosureGroup(isExpanded: isExpanded) {
-                    ForEach(session.traces) { trace in
-                        traceRow(trace).tag(TraceSelection.trace(trace.traceId))
-                    }
-                } label: {
+            OutlineGroup(sessionTreeNodes, children: \.children) { node in
+                switch node.content {
+                case .session(let session):
                     sessionHeader(session)
+                        .tag(TraceSelection.session(session.id))
+                case .trace(let trace):
+                    traceRow(trace)
+                        .tag(TraceSelection.trace(trace.traceId))
                 }
-                .tag(TraceSelection.session(session.id))
             }
         }
         .listStyle(.sidebar)
