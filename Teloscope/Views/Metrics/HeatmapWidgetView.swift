@@ -6,12 +6,13 @@ struct HeatmapWidgetView: View {
     /// Flat list of (weekday, hour, count) entries. weekday uses Calendar convention: 1=Sun…7=Sat.
     let data: [(weekday: Int, hour: Int, count: Int)]
 
-    @AppStorage("weekStartDay") private var weekStartDay: Int = 2
+    @AppStorage("weekStartDay") private var weekStartDay: Int = Calendar.current.firstWeekday
 
     // Mon–Sun or Sun–Sat display order depending on weekStartDay.
     private var orderedWeekdays: [(label: String, calValue: Int)] {
         let monFirst = [("Mon", 2), ("Tue", 3), ("Wed", 4), ("Thu", 5), ("Fri", 6), ("Sat", 7), ("Sun", 1)]
         let sunFirst = [("Sun", 1), ("Mon", 2), ("Tue", 3), ("Wed", 4), ("Thu", 5), ("Fri", 6), ("Sat", 7)]
+        // weekStartDay: 1 = Sunday-first, any other value = Monday-first (only 1 and 2 are written by settings UI)
         return weekStartDay == 1 ? sunFirst : monFirst
     }
 
@@ -101,7 +102,9 @@ struct HeatmapWidgetView: View {
 }
 
 #Preview("Sun first") {
-    HeatmapWidgetView(
+    let store = UserDefaults(suiteName: "preview.sunFirst")!
+    store.set(1, forKey: "weekStartDay")
+    return HeatmapWidgetView(
         title: "Usage by Time",
         data: {
             var entries: [(weekday: Int, hour: Int, count: Int)] = []
@@ -114,10 +117,7 @@ struct HeatmapWidgetView: View {
             return entries
         }()
     )
-    .defaultAppStorage(UserDefaults(suiteName: "preview.sunFirst")!)
-    .onAppear {
-        UserDefaults(suiteName: "preview.sunFirst")!.set(1, forKey: "weekStartDay")
-    }
+    .defaultAppStorage(store)
     .frame(width: 300)
     .padding()
 }
