@@ -2,6 +2,7 @@ xcuserdata/
 /DerivedData/
 .derived-data-log-*
 /.claude/
+/.vscode/
 .worktrees/
 .superpowers/
 
