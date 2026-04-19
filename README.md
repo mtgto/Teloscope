@@ -17,6 +17,21 @@ A macOS 14+ app that acts as an OpenTelemetry collector. It receives OTLP/HTTP s
 - macOS 14+
 - Xcode 16+
 
+## Installation
+
+1. Mount the `.dmg` file and drag `Teloscope.app` to `/Applications`
+2. Launch Teloscope from `/Applications`
+
+## Uninstallation
+
+1. Quit Teloscope
+2. Move `/Applications/Teloscope.app` to Trash
+3. Remove the app container (SwiftData storage and preferences):
+
+```bash
+rm -rf ~/Library/Containers/net.mtgto.Teloscope
+```
+
 ## Getting Started
 
 1. Clone the repository and open `Teloscope.xcodeproj` in Xcode
@@ -81,3 +96,7 @@ Install dependencies via Homebrew if needed:
 brew install protobuf
 brew install swift-protobuf  # installs protoc-gen-swift
 ```
+
+## License
+
+[MIT](LICENSE)
