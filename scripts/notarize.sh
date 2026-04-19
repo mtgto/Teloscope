@@ -16,7 +16,7 @@ set -euo pipefail
 KEYCHAIN_PROFILE="TeloscopeNotarize"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 EXPORT_OPTIONS_PLIST="${SCRIPT_DIR}/ExportOptions.plist"
-OUTPUT_DIR="${HOME}/Documents/Teloscope-Releases"
+OUTPUT_DIR="${HOME}/Documents/Teloscope/${MARKETING_VERSION}"
 LOG_FILE="${OUTPUT_DIR}/notarize.log"
 
 # ── Resolve archive path ───────────────────────────────────────────────────────
@@ -32,16 +32,11 @@ mkdir -p "${OUTPUT_DIR}"
 # ── Redirect all output to log file from here (append) ────────────────────────
 exec >> "${LOG_FILE}" 2>&1
 
-# ── Derive version from archive Info.plist ─────────────────────────────────────
-ARCHIVE_INFOPLIST="${ARCHIVE_PATH}/Info.plist"
-APP_VERSION="$(/usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleShortVersionString" "${ARCHIVE_INFOPLIST}" 2>/dev/null || echo "unknown")"
-BUILD_NUMBER="$(/usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleVersion" "${ARCHIVE_INFOPLIST}" 2>/dev/null || echo "0")"
-
 echo ""
 echo "════════════════════════════════════════════════════════════"
 echo "  Teloscope Notarization — $(date '+%Y-%m-%d %H:%M:%S')"
 echo "  Archive : ${ARCHIVE_PATH}"
-echo "  Version : ${APP_VERSION} (${BUILD_NUMBER})"
+echo "  Version : ${MARKETING_VERSION} (${CURRENT_PROJECT_VERSION})"
 echo "════════════════════════════════════════════════════════════"
 
 # ── Step 1: Export .app from .xcarchive ───────────────────────────────────────
@@ -63,7 +58,7 @@ fi
 echo "  Exported to: ${APP_PATH}"
 
 # ── Step 2: Create DMG ────────────────────────────────────────────────────────
-DMG_NAME="Teloscope-${APP_VERSION}.dmg"
+DMG_NAME="Teloscope-${MARKETING_VERSION}.dmg"
 DMG_PATH="${OUTPUT_DIR}/${DMG_NAME}"
 STAGING_DIR="${TMPDIR}teloscope-dmg-staging-$$"
 
@@ -116,7 +111,7 @@ echo "[5/5] Verifying stapled DMG..."
 xcrun stapler validate "${DMG_PATH}"
 
 # ── Step 6: Archive dSYMs ─────────────────────────────────────────────────────
-DSYM_ZIP="${OUTPUT_DIR}/Teloscope-${APP_VERSION}.zip"
+DSYM_ZIP="${OUTPUT_DIR}/Teloscope-${MARKETING_VERSION}.zip"
 DSYM_DIR="${ARCHIVE_PATH}/dSYMs"
 
 echo "[6/6] Archiving dSYMs: Teloscope-${APP_VERSION}.zip"
@@ -133,3 +128,5 @@ echo "  DMG : ${DMG_PATH}"
 echo "  dSYM: ${DSYM_ZIP}"
 echo "  Log : ${LOG_FILE}"
 echo "════════════════════════════════════════════════════════════"
+
+open "${OUTPUT_DIR}"
