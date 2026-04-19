@@ -17,30 +17,13 @@ A macOS 14+ app that acts as an OpenTelemetry collector. It receives OTLP/HTTP s
 ## Requirements
 
 - macOS 14+
-- Xcode 16+
-
-## Installation
-
-1. Mount the `.dmg` file and drag `Teloscope.app` to `/Applications`
-2. Launch Teloscope from `/Applications`
-
-## Uninstallation
-
-1. Quit Teloscope
-2. Move `/Applications/Teloscope.app` to Trash
-3. Remove the app container (SwiftData storage and preferences):
-
-```bash
-rm -rf ~/Library/Containers/net.mtgto.Teloscope
-```
 
 ## Getting Started
 
-1. Clone the repository and open `Teloscope.xcodeproj` in Xcode
-2. Resolve Swift packages: **File → Packages → Resolve Package Versions**
-3. Build and run (`Cmd+R`)
-4. Click **Start Server** in the toolbar to start the OTLP server on port 4318
-5. Configure Claude Code to send telemetry to the app:
+1. Install Teloscope (see [Installation](#installation) below)
+2. Launch Teloscope from `/Applications`
+3. Click **Start Server** in the toolbar to start the OTLP server on port 4318
+4. Add the following to your Claude Code settings to send telemetry to Teloscope:
 
 ```json
 // ~/.claude/settings.json
@@ -55,6 +38,23 @@ rm -rf ~/Library/Containers/net.mtgto.Teloscope
     "OTEL_TRACES_EXPORTER": "otlp"
   }
 }
+```
+
+5. Start using Claude Code — traces will appear in Teloscope automatically
+
+## Installation
+
+1. Mount the `.dmg` file and drag `Teloscope.app` to `/Applications`
+2. Launch Teloscope from `/Applications`
+
+## Uninstallation
+
+1. Quit Teloscope
+2. Move `/Applications/Teloscope.app` to Trash
+3. Remove the app container (SwiftData storage and preferences):
+
+```bash
+rm -rf ~/Library/Containers/net.mtgto.Teloscope
 ```
 
 ## Developer Guide
