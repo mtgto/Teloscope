@@ -26,4 +26,21 @@ struct AppSettingsTests {
         #expect(settings2.autoStart == true)
         #expect(settings2.retentionDays == 30)
     }
+
+    @Test func weekStartDayDefaultsToSystemCalendar() {
+        let defaults = UserDefaults(suiteName: "test.AppSettingsTests.\(UUID().uuidString)")!
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.weekStartDay == Calendar.current.firstWeekday)
+    }
+
+    @Test func weekStartDayPersists() {
+        let suiteName = "test.AppSettingsTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        let settings = AppSettings(defaults: defaults)
+        settings.weekStartDay = 1
+        settings.save()
+
+        let settings2 = AppSettings(defaults: defaults)
+        #expect(settings2.weekStartDay == 1)
+    }
 }
