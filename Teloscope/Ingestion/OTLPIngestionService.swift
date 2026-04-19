@@ -21,7 +21,7 @@ final class OTLPIngestionService {
     private func ingestTraces(_ data: Data) {
         guard let proto = try? Opentelemetry_Proto_Collector_Trace_V1_ExportTraceServiceRequest(serializedBytes: data) else { return }
         for rsProto in proto.resourceSpans {
-            let rs = ResourceSpans()
+            let rs = ResourceSpans(rawData: data)
             rs.resourceAttributes = rsProto.resource.attributes.map {
                 ResourceAttribute(key: $0.key, value: AttributeValue(anyValue: $0.value))
             }
@@ -68,6 +68,22 @@ final class OTLPIngestionService {
     private func ingestLogs(_ data: Data) {
         modelContext.insert(ResourceLogs(rawData: data))
         try? modelContext.save()
+    }
+
+    func backfillTypedColumns() {
+        let descriptor = FetchDescriptor<OTLPSpan>(
+            predicate: #Predicate { $0.toolName == nil }
+        )
+        guard let spans = try? modelContext.fetch(descriptor) else { return }
+        var changed = false
+        for span in spans where span.name == "claude_code.tool" {
+            if let attr = span.attributes.first(where: { $0.key == "tool_name" }),
+               let toolName = attr.value?.stringValue {
+                span.toolName = toolName
+                changed = true
+            }
+        }
+        if changed { try? modelContext.save() }
     }
 
     func deleteOldData(retentionDays: Int) {

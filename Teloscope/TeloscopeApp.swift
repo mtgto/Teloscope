@@ -31,6 +31,7 @@ struct TeloscopeApp: App {
                 .environment(settings)
                 .environment(server)
                 .task {
+                    runStartupMigration()
                     startRetentionTimer()
                     if settings.autoStart {
                         await startServer()
@@ -41,6 +42,12 @@ struct TeloscopeApp: App {
                 }
         }
         .modelContainer(sharedModelContainer)
+    }
+
+    private func runStartupMigration() {
+        let context = ModelContext(sharedModelContainer)
+        let service = OTLPIngestionService(modelContext: context)
+        service.backfillTypedColumns()
     }
 
     private func startServer() async {

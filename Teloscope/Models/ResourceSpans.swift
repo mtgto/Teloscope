@@ -21,13 +21,15 @@ final class ResourceAttribute {
 @Model
 final class ResourceSpans {
     var receivedAt: Date
+    var rawData: Data?
     @Relationship(deleteRule: .cascade)
     var resourceAttributes: [ResourceAttribute]
     @Relationship(deleteRule: .cascade)
     var scopeSpans: [ScopeSpans]
 
-    init(receivedAt: Date = Date(), resourceAttributes: [ResourceAttribute] = [], scopeSpans: [ScopeSpans] = []) {
+    init(receivedAt: Date = Date(), rawData: Data? = nil, resourceAttributes: [ResourceAttribute] = [], scopeSpans: [ScopeSpans] = []) {
         self.receivedAt = receivedAt
+        self.rawData = rawData
         self.resourceAttributes = resourceAttributes
         self.scopeSpans = scopeSpans
     }

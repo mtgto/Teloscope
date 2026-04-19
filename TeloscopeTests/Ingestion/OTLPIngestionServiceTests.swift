@@ -133,6 +133,80 @@ struct OTLPIngestionServiceTests {
         #expect(spans[0].decision == "accept")
     }
 
+    // MARK: - backfillTypedColumns
+
+    @Test func backfillSetsToolNameFromAttribute() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let span = OTLPSpan(
+            traceId: "t", spanId: "s-bf1",
+            name: "claude_code.tool",
+            startTime: .now, endTime: .now
+        )
+        span.attributes = [SpanAttribute(key: "tool_name", value: .string("Bash"))]
+        context.insert(span)
+        try context.save()
+
+        OTLPIngestionService(modelContext: context).backfillTypedColumns()
+
+        let fetched = try context.fetch(FetchDescriptor<OTLPSpan>())
+        #expect(fetched.first?.toolName == "Bash")
+    }
+
+    @Test func backfillIgnoresSpansWithToolNameAlreadySet() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let span = OTLPSpan(
+            traceId: "t", spanId: "s-bf2",
+            name: "claude_code.tool",
+            startTime: .now, endTime: .now,
+            toolName: "Read"
+        )
+        span.attributes = [SpanAttribute(key: "tool_name", value: .string("Bash"))]
+        context.insert(span)
+        try context.save()
+
+        OTLPIngestionService(modelContext: context).backfillTypedColumns()
+
+        let fetched = try context.fetch(FetchDescriptor<OTLPSpan>())
+        #expect(fetched.first?.toolName == "Read")
+    }
+
+    @Test func backfillIgnoresNonToolSpans() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let span = OTLPSpan(
+            traceId: "t", spanId: "s-bf3",
+            name: "claude_code.llm_request",
+            startTime: .now, endTime: .now
+        )
+        span.attributes = [SpanAttribute(key: "tool_name", value: .string("Bash"))]
+        context.insert(span)
+        try context.save()
+
+        OTLPIngestionService(modelContext: context).backfillTypedColumns()
+
+        let fetched = try context.fetch(FetchDescriptor<OTLPSpan>())
+        #expect(fetched.first?.toolName == nil)
+    }
+
+    @Test func backfillSkipsToolSpanWithNoAttribute() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let span = OTLPSpan(
+            traceId: "t", spanId: "s-bf4",
+            name: "claude_code.tool",
+            startTime: .now, endTime: .now
+        )
+        context.insert(span)
+        try context.save()
+
+        OTLPIngestionService(modelContext: context).backfillTypedColumns()
+
+        let fetched = try context.fetch(FetchDescriptor<OTLPSpan>())
+        #expect(fetched.first?.toolName == nil)
+    }
+
     @Test func deletesSpansOlderThanRetentionDays() throws {
         let container = try makeContainer()
         let context = ModelContext(container)
