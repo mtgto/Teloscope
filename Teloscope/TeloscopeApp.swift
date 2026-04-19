@@ -60,6 +60,7 @@ struct TeloscopeApp: App {
 
     private func startServer() async {
         guard !server.isRunning else { return }
+        await MainActor.run { server.lastError = nil }
         let context = ModelContext(sharedModelContainer)
         let ingestion = OTLPIngestionService(modelContext: context)
         do {

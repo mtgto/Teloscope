@@ -33,6 +33,7 @@ struct MainView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(OTLPServer.self) private var server
     @State private var selectedItem: SidebarItem? = .metrics
+    @State private var serverErrorMessage: String?
 
     var body: some View {
         NavigationSplitView {
@@ -53,6 +54,22 @@ struct MainView: View {
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 serverToggleButton
+            }
+        }
+        .onChange(of: server.lastError) { _, newValue in
+            serverErrorMessage = newValue
+        }
+        .alert(
+            "Failed to Start OpenTelemetry Server",
+            isPresented: Binding(
+                get: { serverErrorMessage != nil },
+                set: { if !$0 { serverErrorMessage = nil } }
+            )
+        ) {
+            Button("OK") { serverErrorMessage = nil }
+        } message: {
+            if let msg = serverErrorMessage {
+                Text(msg)
             }
         }
     }
