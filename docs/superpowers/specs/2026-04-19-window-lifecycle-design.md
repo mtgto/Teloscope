@@ -64,3 +64,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 - Menu bar icon / `MenuBarExtra`
 - Settings to toggle window-close behavior
+
+## Future Extensions (via AppDelegate)
+
+The following Dock-related features are not in scope for this change but can be added to `AppDelegate` later:
+
+- **Dock context menu** (`applicationDockMenu(_:)`) — e.g., Start/Stop server from right-click
+- **Dock badge** (`NSApp.dockTile.badgeLabel`) — e.g., indicate server is running
+- **Dock icon image** (`NSApp.dockTile.contentView`) — e.g., overlay a status indicator
+
+All require AppKit APIs and cannot be implemented in SwiftUI alone.
