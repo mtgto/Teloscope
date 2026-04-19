@@ -8,12 +8,13 @@ struct HeatmapWidgetView: View {
 
     @AppStorage("weekStartDay") private var weekStartDay: Int = Calendar.current.firstWeekday == 1 ? 1 : 2
 
-    // Mon–Sun or Sun–Sat display order depending on weekStartDay.
-    private var orderedWeekdays: [(label: String, calValue: Int)] {
-        let monFirst = [("Mon", 2), ("Tue", 3), ("Wed", 4), ("Thu", 5), ("Fri", 6), ("Sat", 7), ("Sun", 1)]
-        let sunFirst = [("Sun", 1), ("Mon", 2), ("Tue", 3), ("Wed", 4), ("Thu", 5), ("Fri", 6), ("Sat", 7)]
-        // weekStartDay: 1 = Sunday-first, any other value = Monday-first (only 1 and 2 are written by settings UI)
-        return weekStartDay == 1 ? sunFirst : monFirst
+    // Weekday display order starting from weekStartDay. weekStartDay uses Calendar convention: 1=Sun…7=Sat.
+    private var orderedWeekdays: [(label: LocalizedStringKey, calValue: Int)] {
+        let weekdays: [(label: LocalizedStringKey, calValue: Int)] = [
+            ("Sun", 1), ("Mon", 2), ("Tue", 3), ("Wed", 4), ("Thu", 5), ("Fri", 6), ("Sat", 7)
+        ]
+        let startIndex = (max(1, min(7, weekStartDay)) - 1)
+        return Array(weekdays[startIndex...]) + Array(weekdays[..<startIndex])
     }
 
     private let countMap: [Int: [Int: Int]]
@@ -53,7 +54,7 @@ struct HeatmapWidgetView: View {
                     // Weekday rows — 24 equal-width flexible cells per row
                     ForEach(orderedWeekdays, id: \.calValue) { wd in
                         HStack(spacing: 0) {
-                            Text(LocalizedStringKey(wd.label))
+                            Text(wd.label)
                                 .font(.system(size: 8))
                                 .foregroundStyle(.secondary)
                                 .frame(width: 28, alignment: .leading)
