@@ -48,7 +48,7 @@ struct HeatmapWidgetView: View {
                     // Weekday rows — 24 equal-width flexible cells per row
                     ForEach(orderedWeekdays, id: \.calValue) { wd in
                         HStack(spacing: 0) {
-                            Text(wd.label)
+                            Text(LocalizedStringKey(wd.label))
                                 .font(.system(size: 8))
                                 .foregroundStyle(.secondary)
                                 .frame(width: 28, alignment: .leading)
