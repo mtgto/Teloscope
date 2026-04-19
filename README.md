@@ -4,6 +4,8 @@ A macOS 14+ app that acts as an OpenTelemetry collector. It receives OTLP/HTTP s
 
 > **Name:** Telos (purpose/end) + scope (observation) — a pun on "telescope"
 
+![Screenshot](docs/screenshot.png)
+
 ## Features
 
 - OTLP/HTTP server on a configurable port (default: 4318)
