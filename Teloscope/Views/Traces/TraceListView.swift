@@ -44,11 +44,13 @@ struct TraceListView: View {
                     ProgressView("Loading...")
                         .frame(maxWidth: .infinity, minHeight: detailPanelMinHeight)
                 } else {
-                    VStack(spacing: 0) {
-                        SessionSummaryView(spans: selectedSpans)
-                            .background(.background)
-                        Divider()
-                        GanttChartView(spans: selectedSpans)
+                    ScrollView(.vertical) {
+                        VStack(spacing: 0) {
+                            SessionSummaryView(spans: selectedSpans)
+                                .background(.background)
+                            Divider()
+                            GanttChartView(spans: selectedSpans)
+                        }
                     }
                     .frame(minHeight: detailPanelMinHeight)
                 }
@@ -57,8 +59,10 @@ struct TraceListView: View {
                     ProgressView("Loading...")
                         .frame(maxWidth: .infinity, minHeight: detailPanelMinHeight)
                 } else {
-                    GanttChartView(spans: selectedSpans)
-                        .frame(minHeight: detailPanelMinHeight)
+                    ScrollView(.vertical) {
+                        GanttChartView(spans: selectedSpans)
+                    }
+                    .frame(minHeight: detailPanelMinHeight)
                 }
             case nil:
                 ContentUnavailableView(

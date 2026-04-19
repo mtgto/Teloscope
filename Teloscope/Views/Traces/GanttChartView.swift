@@ -13,44 +13,42 @@ struct GanttChartView: View {
         let labelMap = buildLabelMap()
         let uniqueLabelCount = Set(labelMap.values).count
 
-        ScrollView(.vertical) {
-            Chart(spans, id: \.spanId) { span in
-                let label = labelMap[span.spanId] ?? span.name
-                BarMark(
-                    xStart: .value("Start", span.startTime.timeIntervalSince(traceStart) * 1000),
-                    xEnd: .value("End", max(span.endTime.timeIntervalSince(traceStart) * 1000,
-                                           span.startTime.timeIntervalSince(traceStart) * 1000 + 1)),
-                    y: .value("Span", label)
-                )
-                .foregroundStyle(barColor(for: span))
-                .cornerRadius(2)
-            }
-            .chartXAxisLabel("Time (ms)", alignment: .center)
-            .chartYAxis {
-                AxisMarks(preset: .aligned) { value in
-                    AxisValueLabel {
-                        if let label = value.as(String.self) {
-                            Text(label)
-                                .font(.system(.caption, design: .monospaced))
-                                .lineLimit(1)
-                        }
+        Chart(spans, id: \.spanId) { span in
+            let label = labelMap[span.spanId] ?? span.name
+            BarMark(
+                xStart: .value("Start", span.startTime.timeIntervalSince(traceStart) * 1000),
+                xEnd: .value("End", max(span.endTime.timeIntervalSince(traceStart) * 1000,
+                                       span.startTime.timeIntervalSince(traceStart) * 1000 + 1)),
+                y: .value("Span", label)
+            )
+            .foregroundStyle(barColor(for: span))
+            .cornerRadius(2)
+        }
+        .chartXAxisLabel("Time (ms)", alignment: .center)
+        .chartYAxis {
+            AxisMarks(preset: .aligned) { value in
+                AxisValueLabel {
+                    if let label = value.as(String.self) {
+                        Text(label)
+                            .font(.system(.caption, design: .monospaced))
+                            .lineLimit(1)
                     }
                 }
             }
-            .chartOverlay { proxy in
-                GeometryReader { geo in
-                    Rectangle().fill(.clear).contentShape(Rectangle())
-                        .onTapGesture { location in
-                            let y = location.y - geo[proxy.plotFrame!].minY
-                            if let label = proxy.value(atY: y, as: String.self) {
-                                selectedSpan = spans.first { (labelMap[$0.spanId] ?? $0.name) == label }
-                            }
-                        }
-                }
-            }
-            .frame(height: CGFloat(uniqueLabelCount) * 28 + 60)
-            .padding()
         }
+        .chartOverlay { proxy in
+            GeometryReader { geo in
+                Rectangle().fill(.clear).contentShape(Rectangle())
+                    .onTapGesture { location in
+                        let y = location.y - geo[proxy.plotFrame!].minY
+                        if let label = proxy.value(atY: y, as: String.self) {
+                            selectedSpan = spans.first { (labelMap[$0.spanId] ?? $0.name) == label }
+                        }
+                    }
+            }
+        }
+        .frame(height: CGFloat(uniqueLabelCount) * 28 + 60)
+        .padding()
         .popover(item: $selectedSpan) { span in
             SpanDetailView(span: span)
         }
