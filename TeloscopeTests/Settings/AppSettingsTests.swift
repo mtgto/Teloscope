@@ -30,7 +30,8 @@ struct AppSettingsTests {
     @Test func weekStartDayDefaultsToSystemCalendar() {
         let defaults = UserDefaults(suiteName: "test.AppSettingsTests.\(UUID().uuidString)")!
         let settings = AppSettings(defaults: defaults)
-        #expect(settings.weekStartDay == Calendar.current.firstWeekday)
+        let expected = Calendar.current.firstWeekday == 1 ? 1 : 2
+        #expect(settings.weekStartDay == expected)
     }
 
     @Test func weekStartDayPersists() {

@@ -6,7 +6,7 @@ struct HeatmapWidgetView: View {
     /// Flat list of (weekday, hour, count) entries. weekday uses Calendar convention: 1=Sun…7=Sat.
     let data: [(weekday: Int, hour: Int, count: Int)]
 
-    @AppStorage("weekStartDay") private var weekStartDay: Int = Calendar.current.firstWeekday
+    @AppStorage("weekStartDay") private var weekStartDay: Int = Calendar.current.firstWeekday == 1 ? 1 : 2
 
     // Mon–Sun or Sun–Sat display order depending on weekStartDay.
     private var orderedWeekdays: [(label: String, calValue: Int)] {
