@@ -6,10 +6,14 @@ struct HeatmapWidgetView: View {
     /// Flat list of (weekday, hour, count) entries. weekday uses Calendar convention: 1=Sun…7=Sat.
     let data: [(weekday: Int, hour: Int, count: Int)]
 
-    // Mon–Sun display order. Calendar weekday values: Mon=2, Tue=3, ..., Sat=7, Sun=1.
-    private let orderedWeekdays: [(label: String, calValue: Int)] = [
-        ("Mon", 2), ("Tue", 3), ("Wed", 4), ("Thu", 5), ("Fri", 6), ("Sat", 7), ("Sun", 1),
-    ]
+    @AppStorage("weekStartDay") private var weekStartDay: Int = 2
+
+    // Mon–Sun or Sun–Sat display order depending on weekStartDay.
+    private var orderedWeekdays: [(label: String, calValue: Int)] {
+        let monFirst = [("Mon", 2), ("Tue", 3), ("Wed", 4), ("Thu", 5), ("Fri", 6), ("Sat", 7), ("Sun", 1)]
+        let sunFirst = [("Sun", 1), ("Mon", 2), ("Tue", 3), ("Wed", 4), ("Thu", 5), ("Fri", 6), ("Sat", 7)]
+        return weekStartDay == 1 ? sunFirst : monFirst
+    }
 
     private let countMap: [Int: [Int: Int]]
     private let maxCount: Int
@@ -78,21 +82,42 @@ struct HeatmapWidgetView: View {
 
 // MARK: - Previews
 
-#Preview {
+#Preview("Mon first") {
     HeatmapWidgetView(
         title: "Usage by Time",
         data: {
             var entries: [(weekday: Int, hour: Int, count: Int)] = []
-            // Simulate heavier weekday usage during business hours
             for wd in 2...6 {
                 for hr in 9...17 {
                     entries.append((weekday: wd, hour: hr, count: Int.random(in: 1...10)))
                 }
             }
-            entries.append((weekday: 1, hour: 20, count: 3)) // occasional Sunday evening
+            entries.append((weekday: 1, hour: 20, count: 3))
             return entries
         }()
     )
+    .frame(width: 300)
+    .padding()
+}
+
+#Preview("Sun first") {
+    HeatmapWidgetView(
+        title: "Usage by Time",
+        data: {
+            var entries: [(weekday: Int, hour: Int, count: Int)] = []
+            for wd in 2...6 {
+                for hr in 9...17 {
+                    entries.append((weekday: wd, hour: hr, count: Int.random(in: 1...10)))
+                }
+            }
+            entries.append((weekday: 1, hour: 20, count: 3))
+            return entries
+        }()
+    )
+    .defaultAppStorage(UserDefaults(suiteName: "preview.sunFirst")!)
+    .onAppear {
+        UserDefaults(suiteName: "preview.sunFirst")!.set(1, forKey: "weekStartDay")
+    }
     .frame(width: 300)
     .padding()
 }
