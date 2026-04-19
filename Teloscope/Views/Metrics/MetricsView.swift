@@ -137,7 +137,7 @@ struct MetricsView: View {
                     dataPoints: m?.hourlyTokens.map { (date: $0.date, value: $0.output) } ?? []
                 ),
             ],
-            yAxisLabel: String(localized: "tokens"),
+            yAxisLabel: String(localized: "Token Count"),
             granularity: m?.timeGranularity ?? .hourly,
             xDomain: dateRange.start...dateRange.end
         )
@@ -169,7 +169,7 @@ struct MetricsView: View {
                     dataPoints: m?.hourlyRequests.map { (date: $0.date, value: $0.value) } ?? []
                 ),
             ],
-            yAxisLabel: String(localized: "requests"),
+            yAxisLabel: String(localized: "Request Count"),
             granularity: m?.timeGranularity ?? .hourly,
             xDomain: dateRange.start...dateRange.end
         )

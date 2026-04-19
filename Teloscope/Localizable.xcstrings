@@ -191,7 +191,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "時間帯別コスト"
+            "value" : "コスト推移"
           }
         }
       }
@@ -478,7 +478,7 @@
         }
       }
     },
-    "requests" : {
+    "Request Count" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
@@ -503,7 +503,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "時間帯別リクエスト数"
+            "value" : "リクエスト数推移"
           }
         }
       }
@@ -730,7 +730,7 @@
         }
       }
     },
-    "tokens" : {
+    "Token Count" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
@@ -749,7 +749,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "時間帯別トークン消費"
+            "value" : "トークン消費推移"
           }
         }
       }
