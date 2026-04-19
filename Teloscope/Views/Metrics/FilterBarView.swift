@@ -78,29 +78,19 @@ struct FilterBarView: View {
         .padding(.vertical, 8)
     }
 
-    @ViewBuilder
     private var customButton: some View {
-        if activePreset == nil {
-            Button {
+        Toggle(isOn: Binding(
+            get: { activePreset == nil },
+            set: { _ in
                 customStart = dateRange.start
                 customEnd = dateRange.end
                 showCustomPicker = true
-            } label: {
-                Label("Custom", systemImage: "calendar")
             }
-            .buttonStyle(.borderedProminent)
-            .popover(isPresented: $showCustomPicker) { customDatePicker }
-        } else {
-            Button {
-                customStart = dateRange.start
-                customEnd = dateRange.end
-                showCustomPicker = true
-            } label: {
-                Label("Custom", systemImage: "calendar")
-            }
-            .buttonStyle(.bordered)
-            .popover(isPresented: $showCustomPicker) { customDatePicker }
+        )) {
+            Label("Custom", systemImage: "calendar")
         }
+        .toggleStyle(.button)
+        .popover(isPresented: $showCustomPicker) { customDatePicker }
     }
 
     private var customDatePicker: some View {
