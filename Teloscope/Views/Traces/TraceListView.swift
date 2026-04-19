@@ -24,6 +24,8 @@ enum TraceSelection: Hashable {
 }
 
 struct TraceListView: View {
+    private let detailPanelMinHeight: CGFloat = 300
+
     @Query(sort: \OTLPSpan.startTime, order: .reverse) private var allSpans: [OTLPSpan]
     @State private var selection: TraceSelection?
     @State private var expandedSessions: Set<String> = []
@@ -40,7 +42,7 @@ struct TraceListView: View {
             case .session:
                 if isLoadingSelection {
                     ProgressView("Loading...")
-                        .frame(maxWidth: .infinity, minHeight: 200)
+                        .frame(maxWidth: .infinity, minHeight: detailPanelMinHeight)
                 } else {
                     VStack(spacing: 0) {
                         SessionSummaryView(spans: selectedSpans)
@@ -48,15 +50,15 @@ struct TraceListView: View {
                         Divider()
                         GanttChartView(spans: selectedSpans)
                     }
-                    .frame(minHeight: 200)
+                    .frame(minHeight: detailPanelMinHeight)
                 }
             case .trace:
                 if isLoadingSelection {
                     ProgressView("Loading...")
-                        .frame(maxWidth: .infinity, minHeight: 200)
+                        .frame(maxWidth: .infinity, minHeight: detailPanelMinHeight)
                 } else {
                     GanttChartView(spans: selectedSpans)
-                        .frame(minHeight: 200)
+                        .frame(minHeight: detailPanelMinHeight)
                 }
             case nil:
                 ContentUnavailableView(
@@ -64,7 +66,7 @@ struct TraceListView: View {
                     systemImage: "chart.bar.doc.horizontal",
                     description: Text("Select a trace from the list above to see the Gantt chart")
                 )
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, minHeight: detailPanelMinHeight)
             }
         }
         .navigationTitle("Traces")
