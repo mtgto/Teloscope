@@ -12,6 +12,17 @@
 
 set -euo pipefail
 
+# ── Error handler ─────────────────────────────────────────────────────────────
+_on_error() {
+    local exit_code=$?
+    local line=$1
+    # Write to stderr so Xcode build log captures it (before exec redirect)
+    echo "ERROR: notarize.sh failed at line ${line} (exit ${exit_code})" >&2
+    # Show a dialog — osascript uses its own stderr, unaffected by exec redirect
+    osascript -e "display alert \"Notarization Failed\" message \"notarize.sh failed at line ${line} (exit ${exit_code}).\\n\\nSee: ${LOG_FILE:-notarize.log}\" as critical" >/dev/null 2>&1 || true
+}
+trap '_on_error $LINENO' ERR
+
 # ── Configuration ─────────────────────────────────────────────────────────────
 KEYCHAIN_PROFILE="TeloscopeNotarize"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -61,6 +72,7 @@ echo "  Exported to: ${APP_PATH}"
 DMG_NAME="Teloscope-${MARKETING_VERSION}.dmg"
 DMG_PATH="${OUTPUT_DIR}/${DMG_NAME}"
 STAGING_DIR="${TMPDIR}teloscope-dmg-staging-$$"
+VOL_NAME="Teloscope ${MARKETING_VERSION}"
 
 echo "[2/5] Creating DMG: ${DMG_NAME}"
 mkdir -p "${STAGING_DIR}"
@@ -69,8 +81,13 @@ ln -s /Applications "${STAGING_DIR}/Applications"
 
 [[ -f "${DMG_PATH}" ]] && rm -f "${DMG_PATH}"
 
+# Detach any leftover volume with the same name from a previous failed run
+if [[ -d "/Volumes/${VOL_NAME}" ]]; then
+    hdiutil detach "/Volumes/${VOL_NAME}" -quiet -force || true
+fi
+
 hdiutil create \
-    -volname "Teloscope ${APP_VERSION}" \
+    -volname "${VOL_NAME}" \
     -srcfolder "${STAGING_DIR}" \
     -ov \
     -format UDZO \
@@ -111,10 +128,10 @@ echo "[5/5] Verifying stapled DMG..."
 xcrun stapler validate "${DMG_PATH}"
 
 # ── Step 6: Archive dSYMs ─────────────────────────────────────────────────────
-DSYM_ZIP="${OUTPUT_DIR}/Teloscope-${MARKETING_VERSION}.zip"
+DSYM_ZIP="${OUTPUT_DIR}/Teloscope-${MARKETING_VERSION}-dSYM.zip"
 DSYM_DIR="${ARCHIVE_PATH}/dSYMs"
 
-echo "[6/6] Archiving dSYMs: Teloscope-${APP_VERSION}.zip"
+echo "[6/6] Archiving dSYMs: Teloscope-${MARKETING_VERSION}.zip"
 [[ -f "${DSYM_ZIP}" ]] && rm -f "${DSYM_ZIP}"
 ditto -c -k --keepParent "${DSYM_DIR}" "${DSYM_ZIP}"
 echo "  dSYM zip created at: ${DSYM_ZIP}"
