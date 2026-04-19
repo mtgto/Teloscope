@@ -186,7 +186,7 @@ struct TraceListView: View {
                 .font(.system(.body, design: .monospaced))
                 .fontWeight(.semibold)
             Spacer()
-            Text("\(session.traceCount) trace\(session.traceCount == 1 ? "" : "s")")
+            Text("\(session.traceCount) traces")
                 .foregroundStyle(.secondary)
                 .font(.caption)
             Text(session.startTime.formatted(.dateTime.month().day().hour().minute()))
