@@ -13,11 +13,13 @@ final class AppSettings {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        defaults.register(defaults: ["weekStartDay": Calendar.current.firstWeekday])
+        let systemWeekStart = Calendar.current.firstWeekday == 1 ? 1 : 2
+        defaults.register(defaults: ["weekStartDay": systemWeekStart])
         port = defaults.object(forKey: "serverPort") as? Int ?? 4318
         autoStart = defaults.bool(forKey: "autoStart")
         retentionDays = defaults.object(forKey: "retentionDays") as? Int ?? 180
-        weekStartDay = defaults.object(forKey: "weekStartDay") as? Int ?? Calendar.current.firstWeekday
+        let rawWeekStart = defaults.object(forKey: "weekStartDay") as? Int ?? Calendar.current.firstWeekday
+        weekStartDay = rawWeekStart == 1 ? 1 : 2
     }
 
     func save() {
