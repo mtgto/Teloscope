@@ -4,6 +4,8 @@ import SwiftData
 
 @main
 struct TeloscopeApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     let sharedModelContainer: ModelContainer = {
         let schema = Schema([
             ResourceSpans.self,
@@ -42,6 +44,12 @@ struct TeloscopeApp: App {
                 }
         }
         .modelContainer(sharedModelContainer)
+        .commands {
+            CommandGroup(before: .windowList) {
+                ShowMainWindowCommand()
+                Divider()
+            }
+        }
     }
 
     private func runStartupMigration() {
@@ -81,4 +89,15 @@ struct TeloscopeApp: App {
 
 extension Notification.Name {
     static let startOTLPServer = Notification.Name("startOTLPServer")
+}
+
+private struct ShowMainWindowCommand: View {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Button("Teloscope") {
+            openWindow(id: "main")
+        }
+        .keyboardShortcut("0", modifiers: .command)
+    }
 }
