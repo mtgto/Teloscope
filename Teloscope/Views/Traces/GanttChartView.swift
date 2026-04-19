@@ -39,10 +39,29 @@ struct GanttChartView: View {
         .chartOverlay { proxy in
             GeometryReader { geo in
                 Rectangle().fill(.clear).contentShape(Rectangle())
-                    .onTapGesture { location in
-                        let y = location.y - geo[proxy.plotFrame!].minY
-                        if let label = proxy.value(atY: y, as: String.self) {
-                            selectedSpan = spans.first { (labelMap[$0.spanId] ?? $0.name) == label }
+                    .onContinuousHover { phase in
+                        switch phase {
+                        case .active(let location):
+                            let plotFrame = geo[proxy.plotFrame!]
+                            guard plotFrame.contains(location) else {
+                                selectedSpan = nil
+                                return
+                            }
+                            let x = location.x - plotFrame.minX
+                            let y = location.y - plotFrame.minY
+                            if let label = proxy.value(atY: y, as: String.self),
+                               let timeMs = proxy.value(atX: x, as: Double.self) {
+                                selectedSpan = spans.first { span in
+                                    guard (labelMap[span.spanId] ?? span.name) == label else { return false }
+                                    let startMs = span.startTime.timeIntervalSince(traceStart) * 1000
+                                    let endMs = max(span.endTime.timeIntervalSince(traceStart) * 1000, startMs + 1)
+                                    return timeMs >= startMs && timeMs <= endMs
+                                }
+                            } else {
+                                selectedSpan = nil
+                            }
+                        case .ended:
+                            selectedSpan = nil
                         }
                     }
             }
