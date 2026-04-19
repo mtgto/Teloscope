@@ -27,6 +27,13 @@ struct SettingsView: View {
                 TextField("Retention (days)", value: $settings.retentionDays, format: .number, prompt: Text("180"))
                     .onChange(of: settings.retentionDays) { settings.save() }
             }
+            Section("Display") {
+                Picker("Week starts on", selection: $settings.weekStartDay) {
+                    Text("Sunday").tag(1)
+                    Text("Monday").tag(2)
+                }
+                .onChange(of: settings.weekStartDay) { settings.save() }
+            }
         }
         .formStyle(.grouped)
     }
