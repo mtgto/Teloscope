@@ -21,9 +21,18 @@ struct MetricsView: View {
             .background(.bar)
             Divider()
             Group {
-                if let m = dashboardModel.metrics, m.sessionCount > 0 || m.totalInputTokens > 0 {
-                    metricsGrid(m)
-                        .redacted(reason: dashboardModel.isLoading ? .invalidated : [])
+                if let m = dashboardModel.metrics {
+                    if m.sessionCount > 0 || m.totalInputTokens > 0 {
+                        metricsGrid(m)
+                            .redacted(reason: dashboardModel.isLoading ? .invalidated : [])
+                    } else if !dashboardModel.isLoading {
+                        ContentUnavailableView(
+                            "No Data",
+                            systemImage: "chart.line.uptrend.xyaxis",
+                            description: Text("No spans recorded in the selected range.")
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
                 } else if dashboardModel.isLoading {
                     metricsGrid(nil)
                         .redacted(reason: .placeholder)
