@@ -19,40 +19,52 @@ struct PieWidgetView: View {
 
     var body: some View {
         GroupBox {
-            if !redactionReasons.contains(.placeholder) && slices.isEmpty {
-                Text("No data")
-                    .foregroundStyle(.secondary)
-                    .font(.caption)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 8)
-            } else {
-                HStack(alignment: .center, spacing: 12) {
-                    Spacer()
-                    // Charts は .redacted に対応していないため、.placeholder 時のみ Circle で代替
-                    // .invalidated 時は実チャートをそのまま表示（親の redaction でぼかされる）
-                    if redactionReasons.contains(.placeholder) {
+            HStack(alignment: .center, spacing: 12) {
+                Spacer()
+                // Charts does not support .redacted, so use a plain Circle for .placeholder.
+                // For .invalidated, the real chart is shown and blurred by the parent redaction.
+                if redactionReasons.contains(.placeholder) || slices.isEmpty {
+                    ZStack {
                         Circle()
-                            .fill(.gray.opacity(0.3))
+                            .fill(.gray.opacity(0.15))
                             .frame(width: 80, height: 80)
-                    } else {
-                        ZStack {
-                            Chart(slices) { slice in
-                                SectorMark(
-                                    angle: .value("Value", slice.value),
-                                    innerRadius: .ratio(0.55),
-                                    angularInset: 1.5
-                                )
-                                .foregroundStyle(slice.color)
-                            }
-                            if let label = centerLabel {
-                                Text(label)
-                                    .font(.caption2.bold())
-                                    .multilineTextAlignment(.center)
+                        Circle()
+                            .fill(Color(NSColor.windowBackgroundColor))
+                            .frame(width: 44, height: 44)
+                    }
+                } else {
+                    ZStack {
+                        Chart(slices) { slice in
+                            SectorMark(
+                                angle: .value("Value", slice.value),
+                                innerRadius: .ratio(0.55),
+                                angularInset: 1.5
+                            )
+                            .foregroundStyle(slice.color)
+                        }
+                        if let label = centerLabel {
+                            Text(label)
+                                .font(.caption2.bold())
+                                .multilineTextAlignment(.center)
+                        }
+                    }
+                    .frame(width: 80, height: 80)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    if slices.isEmpty {
+                        ForEach(0..<2, id: \.self) { _ in
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(.gray)
+                                    .frame(width: 8, height: 8)
+                                Text("Placeholder")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
                             }
                         }
-                        .frame(width: 80, height: 80)
-                    }
-                    VStack(alignment: .leading, spacing: 4) {
+                        .redacted(reason: .placeholder)
+                    } else {
                         ForEach(slices, id: \.id) { slice in
                             HStack(spacing: 4) {
                                 Circle()
@@ -65,10 +77,10 @@ struct PieWidgetView: View {
                             }
                         }
                     }
-                    Spacer()
                 }
-                .padding(8)
+                Spacer()
             }
+            .padding(8)
         } label: {
             Text(title).unredacted()
         }
@@ -88,13 +100,20 @@ struct PieWidgetView: View {
     .padding()
 }
 
+#Preview("No Data") {
+    PieWidgetView(
+        title: "Approval Rate",
+        slices: [],
+        centerLabel: nil
+    )
+    .frame(width: 260)
+    .padding()
+}
+
 #Preview("Loading") {
     PieWidgetView(
         title: "Approval Rate",
-        slices: [
-            PieSlice(label: "Approved (\(0))", value: 1, color: .green),
-            PieSlice(label: "Rejected (\(0))", value: 1, color: .red),
-        ],
+        slices: [],
         centerLabel: nil
     )
     .redacted(reason: .placeholder)

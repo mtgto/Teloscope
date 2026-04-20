@@ -113,10 +113,7 @@ struct MetricsView: View {
             ]
             centerLabel = m.approvalRate.map { "\(Int($0 * 100))%" }
         } else {
-            slices = [
-                PieSlice(label: "Approved (\(0))", value: 1, color: .green),
-                PieSlice(label: "Rejected (\(0))", value: 1, color: .red),
-            ]
+            slices = []
             centerLabel = nil
         }
         return PieWidgetView(title: "Approval Rate", slices: slices, centerLabel: centerLabel)
@@ -197,10 +194,7 @@ struct MetricsView: View {
                 value: Double(entry.requestCount),
                 color: palette[i % palette.count]
             )
-        } ?? [
-            PieSlice(label: "model-name (0)", value: 1, color: .blue),
-            PieSlice(label: "model-name (0)", value: 1, color: .orange),
-        ]
+        } ?? []
         return PieWidgetView(title: "Model Distribution", slices: slices, centerLabel: nil)
     }
 }
