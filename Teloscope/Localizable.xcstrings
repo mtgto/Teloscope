@@ -332,16 +332,6 @@
         }
       }
     },
-    "Getting Started" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "はじめに"
-          }
-        }
-      }
-    },
     "Filter by Model" : {
       "localizations" : {
         "ja" : {
@@ -358,6 +348,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "金"
+          }
+        }
+      }
+    },
+    "Getting Started" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "はじめに"
           }
         }
       }
@@ -728,16 +728,6 @@
         }
       }
     },
-    "Show setup guide" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "セットアップガイドを表示"
-          }
-        }
-      }
-    },
     "Sessions" : {
       "localizations" : {
         "ja" : {
@@ -754,6 +744,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "設定"
+          }
+        }
+      }
+    },
+    "Show setup guide" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "セットアップガイドを表示"
           }
         }
       }
