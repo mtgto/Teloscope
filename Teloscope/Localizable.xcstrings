@@ -352,12 +352,12 @@
         }
       }
     },
-    "Getting Started" : {
+    "Configure Claude Code OpenTelemetry" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "はじめに"
+            "value" : "Claude CodeのOpenTelemetryを設定してください"
           }
         }
       }

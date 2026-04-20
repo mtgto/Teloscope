@@ -12,7 +12,7 @@ struct SetupGuideView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Getting Started")
+            Text("Configure Claude Code OpenTelemetry")
                 .font(.title2)
                 .fontWeight(.semibold)
 
