@@ -6,6 +6,10 @@ struct SetupGuideView: View {
     @Environment(OTLPServer.self) private var server
     @Environment(\.dismiss) private var dismiss
 
+    private var snippet: String {
+        setupGuideSnippet(port: settings.port)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Getting Started")
@@ -18,7 +22,7 @@ struct SetupGuideView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             ScrollView {
-                Text(setupGuideSnippet(port: settings.port))
+                Text(snippet)
                     .font(.system(.body, design: .monospaced))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(8)
@@ -34,7 +38,7 @@ struct SetupGuideView: View {
                 Spacer()
                 Button("Copy") {
                     NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(setupGuideSnippet(port: settings.port), forType: .string)
+                    NSPasteboard.general.setString(snippet, forType: .string)
                 }
                 Button("Close") {
                     dismiss()

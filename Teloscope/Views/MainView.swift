@@ -79,12 +79,9 @@ struct MainView: View {
                 showingSetupGuide = true
             }
         }
-        .onChange(of: showingSetupGuide) { _, newValue in
-            if !newValue {
-                hasSeenSetupGuide = true
-            }
-        }
-        .sheet(isPresented: $showingSetupGuide) {
+        .sheet(isPresented: $showingSetupGuide, onDismiss: {
+            hasSeenSetupGuide = true
+        }) {
             SetupGuideView()
         }
     }
