@@ -34,6 +34,8 @@ struct MainView: View {
     @Environment(OTLPServer.self) private var server
     @State private var selectedItem: SidebarItem? = .metrics
     @State private var serverErrorMessage: String?
+    @AppStorage("hasSeenSetupGuide") private var hasSeenSetupGuide = false
+    @State private var showingSetupGuide = false
 
     var body: some View {
         NavigationSplitView {
@@ -71,6 +73,19 @@ struct MainView: View {
             if let msg = serverErrorMessage {
                 Text(msg)
             }
+        }
+        .onAppear {
+            if !hasSeenSetupGuide {
+                showingSetupGuide = true
+            }
+        }
+        .onChange(of: showingSetupGuide) { _, newValue in
+            if !newValue {
+                hasSeenSetupGuide = true
+            }
+        }
+        .sheet(isPresented: $showingSetupGuide) {
+            SetupGuideView()
         }
     }
 
