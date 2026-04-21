@@ -598,6 +598,27 @@
         }
       }
     },
+    "Unknown" : {
+      "comment" : "Label for the number of user decisions with an unrecognized decision value.",
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不明"
+          }
+        }
+      }
+    },
+    "Unknown (%lld)" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不明 (%lld)"
+          }
+        }
+      }
+    },
     "Request Count" : {
       "localizations" : {
         "ja" : {

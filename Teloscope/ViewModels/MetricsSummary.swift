@@ -56,6 +56,7 @@ struct MetricsSummary {
     let sessionCount: Int
     let approvalCount: Int
     let rejectionCount: Int
+    let unknownCount: Int
     let hasApprovalData: Bool
     let modelDistribution: [(model: String, requestCount: Int)]
     let toolRanking: [(name: String, count: Int)]
@@ -79,6 +80,7 @@ struct MetricsSummary {
         var sessionIds: Set<String> = []
         var approved = 0
         var rejected = 0
+        var unknown = 0
         var hasDecisions = false
         var modelCounts: [String: Int] = [:]
         var toolCounts: [String: Int] = [:]
@@ -109,7 +111,8 @@ struct MetricsSummary {
                 switch span.decision?.lowercased() {
                 case "accept": approved += 1
                 case "reject": rejected += 1
-                default: break
+                case nil:      break
+                default:       unknown += 1
                 }
             } else if span.name == "claude_code.tool" {
                 if let toolName = span.toolName {
@@ -125,6 +128,7 @@ struct MetricsSummary {
         self.sessionCount         = sessionIds.count
         self.approvalCount        = approved
         self.rejectionCount       = rejected
+        self.unknownCount         = unknown
         self.hasApprovalData      = hasDecisions
         self.modelDistribution    = modelCounts
             .sorted { $0.value > $1.value }

@@ -27,6 +27,7 @@ struct SessionSummary {
     let topTools: [(name: String, count: Int)]
     let approvedCount: Int
     let rejectedCount: Int
+    let unknownCount: Int
     let hasDecisionData: Bool
     let sessionDuration: TimeInterval
     let totalSpanCount: Int
@@ -39,10 +40,8 @@ struct SessionSummary {
         var toolCounts: [String: Int] = [:]
         var approvedCount = 0
         var rejectedCount = 0
+        var unknownCount = 0
         var hasDecisionData = false
-
-        let approvedValues = Set(["accept"])
-        let rejectedValues = Set(["reject"])
 
         for span in spans {
             if span.name.hasPrefix("claude_code.llm_request") {
@@ -52,11 +51,11 @@ struct SessionSummary {
                 llmRequestCount += 1
             } else if span.name.hasPrefix("claude_code.tool.blocked_on_user") {
                 hasDecisionData = true
-                let decision = span.decision?.lowercased() ?? ""
-                if approvedValues.contains(decision) {
-                    approvedCount += 1
-                } else if rejectedValues.contains(decision) {
-                    rejectedCount += 1
+                switch span.decision?.lowercased() {
+                case "accept": approvedCount += 1
+                case "reject": rejectedCount += 1
+                case nil:      break
+                default:       unknownCount += 1
                 }
             } else if span.name == "claude_code.tool" {
                 // tool_name is not a typed column; fall back to SpanAttribute for display.
@@ -74,6 +73,7 @@ struct SessionSummary {
         self.topTools = toolCounts.sorted { $0.value > $1.value }.prefix(5).map { (name: $0.key, count: $0.value) }
         self.approvedCount = approvedCount
         self.rejectedCount = rejectedCount
+        self.unknownCount = unknownCount
         self.hasDecisionData = hasDecisionData
         self.totalSpanCount = spans.count
 
@@ -143,6 +143,9 @@ struct SessionSummaryView: View {
                 VStack(spacing: 2) {
                     LabeledValue(label: "Approved", value: "\(summary.approvedCount)")
                     LabeledValue(label: "Rejected", value: "\(summary.rejectedCount)")
+                    if summary.unknownCount > 0 {
+                        LabeledValue(label: "Unknown", value: "\(summary.unknownCount)")
+                    }
                 }
             }
         }

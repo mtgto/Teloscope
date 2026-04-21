@@ -116,10 +116,14 @@ struct MetricsView: View {
         let slices: [PieSlice]
         let centerLabel: String?
         if let m, m.hasApprovalData {
-            slices = [
+            var s = [
                 PieSlice(label: "Approved (\(m.approvalCount))", value: Double(m.approvalCount), color: .green),
                 PieSlice(label: "Rejected (\(m.rejectionCount))", value: Double(m.rejectionCount), color: .red),
             ]
+            if m.unknownCount > 0 {
+                s.append(PieSlice(label: "Unknown (\(m.unknownCount))", value: Double(m.unknownCount), color: .gray))
+            }
+            slices = s
             centerLabel = m.approvalRate.map { "\(Int($0 * 100))%" }
         } else {
             slices = []
