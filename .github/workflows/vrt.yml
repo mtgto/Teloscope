@@ -46,15 +46,12 @@ jobs:
     - name: Install Pillow
       run: pip3 install --quiet Pillow
 
-    - name: Check baseline snapshots exist
+    - name: Run VRT report
       run: |
         if [ -z "$(ls -A Snapshots/Baseline 2>/dev/null)" ]; then
           echo "::warning::No baseline snapshots found — skipping VRT comparison."
           exit 0
         fi
-
-    - name: Run VRT report
-      run: |
         python3 scripts/vrt-report.py \
           Snapshots/Baseline \
           "TeloscopeTests/VRT/__Snapshots__"
