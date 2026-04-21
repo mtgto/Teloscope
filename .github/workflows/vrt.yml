@@ -1,0 +1,94 @@
+name: vrt
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '*.md'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '*.md'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # PR 時: baseline と比較して差分を Job Summary に表示
+  vrt-check:
+    if: github.event_name == 'pull_request'
+    runs-on: macos-26
+    steps:
+      - name: Select Xcode version
+        run: sudo xcode-select -s '/Applications/Xcode_26.4.app/Contents/Developer'
+
+      - uses: actions/checkout@v6
+
+      - name: Fetch baselines from vrt-baselines
+        run: |
+          git fetch origin vrt-baselines
+          git checkout origin/vrt-baselines -- "TeloscopeTests/VRT/__Snapshots__" || true
+          mkdir -p Snapshots/Baseline
+          if [ -d "TeloscopeTests/VRT/__Snapshots__" ]; then
+            rsync -a "TeloscopeTests/VRT/__Snapshots__/" Snapshots/Baseline/
+            rm -rf "TeloscopeTests/VRT/__Snapshots__"
+          fi
+
+      - name: Generate new snapshots
+        run: |
+          export RECORD_SNAPSHOTS=true
+          xcodebuild -scheme Teloscope test \
+            -only-testing TeloscopeTests/PreviewSnapshotTests \
+            | xcbeautify
+
+      - name: Install Pillow
+        run: pip3 install --quiet Pillow
+
+      - name: Run VRT report
+        run: |
+          python3 scripts/vrt-report.py \
+            Snapshots/Baseline \
+            "TeloscopeTests/VRT/__Snapshots__"
+
+  # main push 時: 新規 baseline を生成して vrt-baselines に push
+  update-baselines:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: macos-26
+    steps:
+      - name: Select Xcode version
+        run: sudo xcode-select -s '/Applications/Xcode_26.4.app/Contents/Developer'
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # worktree 操作に必要
+
+      - name: Generate snapshots
+        run: |
+          export RECORD_SNAPSHOTS=true
+          xcodebuild -scheme Teloscope test \
+            -only-testing TeloscopeTests/PreviewSnapshotTests \
+            | xcbeautify
+
+      - name: Push to vrt-baselines
+        run: |
+          SNAPSHOT_SRC="TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin vrt-baselines
+          git worktree add /tmp/vrt-baselines origin/vrt-baselines
+
+          mkdir -p "/tmp/vrt-baselines/TeloscopeTests/VRT/__Snapshots__"
+          rsync -av --delete "$SNAPSHOT_SRC/" \
+            "/tmp/vrt-baselines/TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests/"
+
+          cd /tmp/vrt-baselines
+          git add -A
+          git diff --staged --quiet || \
+            git commit -m "chore: update VRT baselines from main [skip ci]"
+          git push origin HEAD:vrt-baselines
+
+          cd -
+          git worktree remove /tmp/vrt-baselines --force
