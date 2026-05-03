@@ -15,7 +15,7 @@ defaults:
     shell: bash
 
 jobs:
-  # PR 時: baseline と比較して差分を Job Summary に表示
+  # On PR: compare against baseline and show diffs in Job Summary
   vrt-check:
     if: github.event_name == 'pull_request'
     runs-on: macos-26
@@ -68,7 +68,7 @@ jobs:
         path: vrt-diffs/
         if-no-files-found: ignore
 
-  # main push 時: 新規 baseline を生成して vrt-baselines に push
+  # On push to main: generate new baselines and push to vrt-baselines
   update-baselines:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: macos-26
@@ -80,7 +80,7 @@ jobs:
 
     - uses: actions/checkout@v6
       with:
-        fetch-depth: 0  # worktree 操作に必要
+        fetch-depth: 0  # required for worktree operations
 
     - name: Generate snapshots
       run: |
