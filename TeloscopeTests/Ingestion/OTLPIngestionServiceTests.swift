@@ -10,9 +10,27 @@ struct OTLPIngestionServiceTests {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         return try ModelContainer(
             for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
-            ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self,
+            ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
             configurations: config
         )
+    }
+
+    @Test func logEventCanBeInserted() throws {
+        let container = try makeContainer()
+        let ctx = ModelContext(container)
+        let event = LogEvent(
+            eventName: "skill_activated",
+            timestamp: Date(),
+            sessionId: "sess-1",
+            skillName: "superpowers:brainstorming",
+            invocationTrigger: "claude-proactive",
+            skillSource: "userSettings"
+        )
+        ctx.insert(event)
+        try ctx.save()
+        let fetched = try ctx.fetch(FetchDescriptor<LogEvent>())
+        #expect(fetched.count == 1)
+        #expect(fetched[0].skillName == "superpowers:brainstorming")
     }
 
     @Test func ingestsSpanFromTracesRequest() throws {

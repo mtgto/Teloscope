@@ -8,7 +8,7 @@ private func makeContainer() throws -> ModelContainer {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     return try ModelContainer(
         for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
-             ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self,
+             ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
         configurations: config
     )
 }
