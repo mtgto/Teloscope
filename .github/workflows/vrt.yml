@@ -41,8 +41,9 @@ jobs:
         xcodebuild -scheme Teloscope test \
           -only-testing TeloscopeTests/PreviewSnapshotTests \
           | xcbeautify
+        SNAPSHOT_SRC="$HOME/Library/Containers/net.mtgto.Teloscope/Data/tmp/VRTSnapshots"
         mkdir -p "TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests"
-        cp "${TMPDIR}VRTSnapshots/"*.png "TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests/"
+        cp "$SNAPSHOT_SRC/"*.png "TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests/"
 
     - name: Install Pillow
       run: pip3 install --quiet Pillow
@@ -80,7 +81,7 @@ jobs:
 
     - name: Push to vrt-baselines
       run: |
-        SNAPSHOT_SRC="${TMPDIR}VRTSnapshots"
+        SNAPSHOT_SRC="$HOME/Library/Containers/net.mtgto.Teloscope/Data/tmp/VRTSnapshots"
         SRC_SHA=$(git rev-parse --short HEAD)
 
         git config user.name "github-actions[bot]"

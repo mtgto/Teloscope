@@ -49,7 +49,7 @@ jobs:
 
     - name: Push updated baselines to vrt-baselines
       run: |
-        SNAPSHOT_SRC="${TMPDIR}VRTSnapshots"
+        SNAPSHOT_SRC="$HOME/Library/Containers/net.mtgto.Teloscope/Data/tmp/VRTSnapshots"
         PR_NUM="${{ github.event.pull_request.number }}"
         SRC_SHA=$(git rev-parse --short HEAD)
 

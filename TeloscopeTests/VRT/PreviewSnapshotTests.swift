@@ -9,7 +9,7 @@ import Testing
     // Fixed reference date for deterministic snapshots.
     private let referenceDate = Date(timeIntervalSince1970: 1_700_000_000) // 2023-11-14
 
-    // All tests write PNGs here (NSTemporaryDirectory is writable inside the App Sandbox).
+    // NSTemporaryDirectory is writable inside the App Sandbox (redirects to container tmp).
     static let outputDir: URL = {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("VRTSnapshots")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
