@@ -18,22 +18,13 @@ import Testing
     }()
 
     private func renderSnapshot<V: View>(_ view: V, name: String) {
-        let hosting = NSHostingView(rootView: AnyView(view))
-        hosting.appearance = NSAppearance(named: .aqua) // force light mode for consistency
-        var size = hosting.fittingSize
-        if size.width < 1 { size.width = 400 }
-        if size.height < 1 { size.height = 300 }
-        hosting.frame = CGRect(origin: .zero, size: size)
-        hosting.layoutSubtreeIfNeeded()
-
-        guard let rep = hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds) else {
-            Issue.record("bitmapImageRepForCachingDisplay failed for \(name)")
-            return
-        }
-        hosting.cacheDisplay(in: hosting.bounds, to: rep)
-
-        guard let png = rep.representation(using: .png, properties: [:]) else {
-            Issue.record("PNG encoding failed for \(name)")
+        let renderer = ImageRenderer(content: view.preferredColorScheme(.light))
+        renderer.scale = 2.0
+        guard let nsImage = renderer.nsImage,
+              let tiff = nsImage.tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff),
+              let png = rep.representation(using: .png, properties: [:]) else {
+            Issue.record("Rendering failed for \(name)")
             return
         }
         let dest = Self.outputDir.appendingPathComponent("\(name).png")
