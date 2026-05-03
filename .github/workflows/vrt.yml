@@ -81,6 +81,7 @@ jobs:
     - name: Push to vrt-baselines
       run: |
         SNAPSHOT_SRC="${TMPDIR}VRTSnapshots"
+        SRC_SHA=$(git rev-parse --short HEAD)
 
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -95,7 +96,7 @@ jobs:
         cd /tmp/vrt-baselines
         git add -A
         git diff --staged --quiet || \
-          git commit -m "chore: update VRT baselines from main [skip ci]"
+          git commit -m "chore: update VRT baselines from ${SRC_SHA} [skip ci]"
         git push origin HEAD:vrt-baselines
 
         cd -

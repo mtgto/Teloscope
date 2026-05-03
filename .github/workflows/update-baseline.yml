@@ -51,6 +51,7 @@ jobs:
       run: |
         SNAPSHOT_SRC="${TMPDIR}VRTSnapshots"
         PR_NUM="${{ github.event.pull_request.number }}"
+        SRC_SHA=$(git rev-parse --short HEAD)
 
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -65,7 +66,7 @@ jobs:
         cd /tmp/vrt-baselines
         git add -A
         git diff --staged --quiet || \
-          git commit -m "chore: update VRT baselines from PR #${PR_NUM} [skip ci]"
+          git commit -m "chore: update VRT baselines from PR #${PR_NUM} (${SRC_SHA}) [skip ci]"
         git push origin HEAD:vrt-baselines
 
         cd -
