@@ -38,10 +38,11 @@ jobs:
     - name: Generate new snapshots
       run: |
         set -o pipefail
-        export RECORD_SNAPSHOTS=true
         xcodebuild -scheme Teloscope test \
           -only-testing TeloscopeTests/PreviewSnapshotTests \
           | xcbeautify
+        mkdir -p "TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests"
+        cp "${TMPDIR}VRTSnapshots/"*.png "TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests/"
 
     - name: Install Pillow
       run: pip3 install --quiet Pillow
@@ -73,14 +74,13 @@ jobs:
     - name: Generate snapshots
       run: |
         set -o pipefail
-        export RECORD_SNAPSHOTS=true
         xcodebuild -scheme Teloscope test \
           -only-testing TeloscopeTests/PreviewSnapshotTests \
           | xcbeautify
 
     - name: Push to vrt-baselines
       run: |
-        SNAPSHOT_SRC="TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests"
+        SNAPSHOT_SRC="${TMPDIR}VRTSnapshots"
 
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -88,7 +88,7 @@ jobs:
         git fetch origin vrt-baselines
         git worktree add /tmp/vrt-baselines origin/vrt-baselines
 
-        mkdir -p "/tmp/vrt-baselines/TeloscopeTests/VRT/__Snapshots__"
+        mkdir -p "/tmp/vrt-baselines/TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests"
         rsync -av --delete "$SNAPSHOT_SRC/" \
           "/tmp/vrt-baselines/TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests/"
 

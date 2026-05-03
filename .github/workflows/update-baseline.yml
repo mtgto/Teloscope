@@ -43,14 +43,13 @@ jobs:
     - name: Generate snapshots from PR branch
       run: |
         set -o pipefail
-        export RECORD_SNAPSHOTS=true
         xcodebuild -scheme Teloscope test \
           -only-testing TeloscopeTests/PreviewSnapshotTests \
           | xcbeautify
 
     - name: Push updated baselines to vrt-baselines
       run: |
-        SNAPSHOT_SRC="TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests"
+        SNAPSHOT_SRC="${TMPDIR}VRTSnapshots"
         PR_NUM="${{ github.event.pull_request.number }}"
 
         git config user.name "github-actions[bot]"
@@ -59,7 +58,7 @@ jobs:
         git fetch origin vrt-baselines
         git worktree add /tmp/vrt-baselines origin/vrt-baselines
 
-        mkdir -p "/tmp/vrt-baselines/TeloscopeTests/VRT/__Snapshots__"
+        mkdir -p "/tmp/vrt-baselines/TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests"
         rsync -av --delete "$SNAPSHOT_SRC/" \
           "/tmp/vrt-baselines/TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests/"
 
