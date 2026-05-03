@@ -46,7 +46,7 @@ jobs:
         cp "$SNAPSHOT_SRC/"*.png "TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests/"
 
     - name: Install Pillow
-      run: pip3 install --quiet Pillow
+      run: pip3 install --quiet --user Pillow
 
     - name: Run VRT report
       run: |
