@@ -21,7 +21,9 @@ def pixel_diff_ratio(baseline: Image.Image, new: Image.Image) -> float:
     if baseline.size != new.size:
         new = new.resize(baseline.size, Image.LANCZOS)
     diff = ImageChops.difference(baseline.convert("RGB"), new.convert("RGB"))
-    changed = sum(1 for r, g, b in diff.getdata() if max(r, g, b) > 10)
+    data = diff.tobytes()
+    n_pixels = len(data) // 3
+    changed = sum(1 for i in range(n_pixels) if max(data[3*i], data[3*i+1], data[3*i+2]) > 10)
     return changed / (baseline.width * baseline.height)
 
 
