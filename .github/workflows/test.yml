@@ -3,12 +3,16 @@ name: test
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - '*.md'
+    paths:
+      - '**/*.swift'
+      - 'Teloscope.xcodeproj/**'
+      - '.github/workflows/test.yml'
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '*.md'
+    paths:
+      - '**/*.swift'
+      - 'Teloscope.xcodeproj/**'
+      - '.github/workflows/test.yml'
 
 defaults:
   run:

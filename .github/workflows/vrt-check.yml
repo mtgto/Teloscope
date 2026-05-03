@@ -1,0 +1,58 @@
+name: vrt-check
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '*.md'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  vrt-check:
+    runs-on: macos-26
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Fetch baselines from vrt-baselines
+      run: |
+        git fetch origin vrt-baselines
+        git checkout origin/vrt-baselines -- "TeloscopeTests/VRT/__Snapshots__" || true
+        mkdir -p Snapshots/Baseline
+        if [ -d "TeloscopeTests/VRT/__Snapshots__" ]; then
+          rsync -a "TeloscopeTests/VRT/__Snapshots__/" Snapshots/Baseline/
+          rm -rf "TeloscopeTests/VRT/__Snapshots__"
+        fi
+
+    - uses: ./.github/actions/generate-vrt-snapshots
+
+    - name: Copy snapshots for comparison
+      run: |
+        SNAPSHOT_SRC="$HOME/Library/Containers/net.mtgto.Teloscope/Data/tmp/VRTSnapshots"
+        mkdir -p "TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests"
+        cp "$SNAPSHOT_SRC/"*.png "TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests/"
+
+    - name: Install Pillow
+      run: |
+        python3 -m venv .venv
+        .venv/bin/pip install --quiet Pillow
+
+    - name: Run VRT report
+      run: |
+        if [ -z "$(ls -A Snapshots/Baseline 2>/dev/null)" ]; then
+          echo "::warning::No baseline snapshots found — skipping VRT comparison."
+          exit 0
+        fi
+        .venv/bin/python3 scripts/vrt-report.py \
+          Snapshots/Baseline \
+          "TeloscopeTests/VRT/__Snapshots__"
+
+    - name: Upload diff images
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: vrt-diffs
+        path: vrt-diffs/
+        if-no-files-found: ignore

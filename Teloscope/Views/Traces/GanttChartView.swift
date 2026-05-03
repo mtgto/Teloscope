@@ -125,9 +125,10 @@ struct GanttChartView: View {
         case name.hasPrefix("claude_code.tool"):
             return .cyan
         default:
-            // Hash the name to a stable color from a palette for unknown span types
+            // djb2 hash — stable across process launches (unlike String.hashValue)
             let palette: [Color] = [.blue, .green, .yellow, .pink, .indigo, .mint]
-            let index = abs(name.hashValue) % palette.count
+            let hash = name.utf8.reduce(5381) { ($0 << 5) &+ $0 &+ Int($1) }
+            let index = abs(hash) % palette.count
             return palette[index]
         }
     }

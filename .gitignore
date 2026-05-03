@@ -5,4 +5,4 @@ xcuserdata/
 /.vscode/
 .worktrees/
 .superpowers/
-
+scripts/__pycache__/
