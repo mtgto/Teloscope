@@ -2,12 +2,10 @@
 # SPDX-License-Identifier: MIT
 """
 Compare baseline PNGs against newly-generated snapshots.
-Creates 3-panel diff images (baseline | diff | new) and writes
-a GitHub Actions Job Summary. Exits with code 1 if any view
+Creates 3-panel diff images (baseline | diff | new) saved to VRT_ARTIFACTS_DIR,
+and writes a GitHub Actions Job Summary. Exits with code 1 if any view
 exceeds the change threshold.
 """
-import base64
-import io
 import os
 import sys
 from pathlib import Path
@@ -15,6 +13,7 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageDraw
 
 THRESHOLD = 0.01  # fail if more than 1% of pixels change
+ARTIFACTS_DIR = Path(os.environ.get("VRT_ARTIFACTS_DIR", "vrt-diffs"))
 
 
 def pixel_diff_ratio(baseline: Image.Image, new: Image.Image) -> float:
@@ -61,12 +60,6 @@ def create_panel(baseline: Image.Image, new: Image.Image) -> Image.Image:
     return panel
 
 
-def to_data_uri(img: Image.Image) -> str:
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
-
-
 def main() -> int:
     if len(sys.argv) != 3:
         print("Usage: vrt-report.py <baseline_dir> <new_dir>", file=sys.stderr)
@@ -92,11 +85,17 @@ def main() -> int:
 
     lines: list[str] = []
     if failures:
+        ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
         lines.append(f"## VRT Results — {len(failures)} difference(s) found\n")
+        lines.append("| View | Changed |")
+        lines.append("|------|---------|")
         for rel, ratio, baseline_img, new_img in failures:
             panel = create_panel(baseline_img, new_img)
-            lines.append(f"### {rel.stem} ({ratio * 100:.1f}% changed) ❌")
-            lines.append(f"![diff]({to_data_uri(panel)})\n")
+            panel.save(ARTIFACTS_DIR / f"{rel.stem}.png")
+            lines.append(f"| {rel.stem} | {ratio * 100:.1f}% ❌ |")
+        lines.append("")
+        lines.append(f"Diff images (baseline \\| highlighted \\| new) are in the **`vrt-diffs`** artifact on this run.")
+        lines.append("")
         lines.append("---")
         lines.append("To approve: add label `vrt-approved` to this PR")
     else:
