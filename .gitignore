@@ -5,5 +5,4 @@ xcuserdata/
 /.vscode/
 .worktrees/
 .superpowers/
-
-TeloscopeTests/VRT/__Snapshots__/
+scripts/__pycache__/
