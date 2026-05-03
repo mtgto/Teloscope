@@ -33,45 +33,16 @@ jobs:
             );
           }
 
-    - name: Select Xcode version
-      run: sudo xcode-select -s '/Applications/Xcode_26.4.app/Contents/Developer'
-
     - uses: actions/checkout@v6
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
 
-    - name: Generate snapshots from PR branch
-      run: |
-        set -o pipefail
-        xcodebuild -scheme Teloscope test \
-          -only-testing TeloscopeTests/PreviewSnapshotTests \
-          | xcbeautify
+    - uses: ./.github/actions/generate-vrt-snapshots
 
-    - name: Push updated baselines to vrt-baselines
-      run: |
-        SNAPSHOT_SRC="$HOME/Library/Containers/net.mtgto.Teloscope/Data/tmp/VRTSnapshots"
-        PR_NUM="${{ github.event.pull_request.number }}"
-        SRC_SHA=$(git rev-parse --short HEAD)
-
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-
-        git fetch origin vrt-baselines
-        git worktree add /tmp/vrt-baselines origin/vrt-baselines
-
-        mkdir -p "/tmp/vrt-baselines/TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests"
-        rsync -av --delete "$SNAPSHOT_SRC/" \
-          "/tmp/vrt-baselines/TeloscopeTests/VRT/__Snapshots__/PreviewSnapshotTests/"
-
-        cd /tmp/vrt-baselines
-        git add -A
-        git diff --staged --quiet || \
-          git commit -m "chore: update VRT baselines from PR #${PR_NUM} (${SRC_SHA}) [skip ci]"
-        git push origin HEAD:vrt-baselines
-
-        cd -
-        git worktree remove /tmp/vrt-baselines --force
+    - uses: ./.github/actions/push-vrt-baselines
+      with:
+        commit-message: "chore: update VRT baselines from PR #${{ github.event.pull_request.number }} (${{ github.event.pull_request.head.sha }}) [skip ci]"
 
     - name: Remove vrt-approved label
       if: always()

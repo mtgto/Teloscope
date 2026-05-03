@@ -1,0 +1,27 @@
+name: vrt-update-baselines
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '*.md'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  update-baselines:
+    runs-on: macos-26
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0  # required for worktree operations
+
+    - uses: ./.github/actions/generate-vrt-snapshots
+
+    - uses: ./.github/actions/push-vrt-baselines
+      with:
+        commit-message: "chore: update VRT baselines from ${{ github.sha }} [skip ci]"
