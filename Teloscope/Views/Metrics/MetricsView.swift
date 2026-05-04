@@ -55,6 +55,11 @@ struct MetricsView: View {
                 refresh()
             }
         }
+        .task {
+            for await _ in NotificationCenter.default.notifications(named: .otlpLogsIngested) {
+                refresh()
+            }
+        }
     }
 
     private func refresh() {
@@ -74,6 +79,7 @@ struct MetricsView: View {
                 approvalWidget(m)
                 modelWidget(m)
                 toolRankingWidget(m)
+                skillRankingWidget(m)
                 usageHeatmapWidget(m)
                 tokensTimelineWidget(m)
                 costTimelineWidget(m)
@@ -196,6 +202,13 @@ struct MetricsView: View {
         BarWidgetView(
             title: "Tool Usage",
             items: m?.toolRanking ?? []
+        )
+    }
+
+    private func skillRankingWidget(_ m: MetricsSummary?) -> some View {
+        BarWidgetView(
+            title: "Skill Usage",
+            items: m?.skillRanking ?? []
         )
     }
 
