@@ -4,17 +4,21 @@ import Foundation
 @testable import Teloscope
 
 struct AppSettingsTests {
+    private func makeDefaults(suiteName: String) -> UserDefaults {
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        return defaults
+    }
+
     @Test func defaultValues() {
-        let defaults = UserDefaults(suiteName: "test.AppSettingsTests.\(UUID().uuidString)")!
-        let settings = AppSettings(defaults: defaults)
+        let settings = AppSettings(defaults: makeDefaults(suiteName: "test.AppSettingsTests.defaultValues"))
         #expect(settings.port == 4318)
         #expect(settings.autoStart == false)
         #expect(settings.retentionDays == 180)
     }
 
     @Test func persistsValues() {
-        let suiteName = "test.AppSettingsTests.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = makeDefaults(suiteName: "test.AppSettingsTests.persistsValues")
         let settings = AppSettings(defaults: defaults)
         settings.port = 9999
         settings.autoStart = true
@@ -28,15 +32,13 @@ struct AppSettingsTests {
     }
 
     @Test func weekStartDayDefaultsToSystemCalendar() {
-        let defaults = UserDefaults(suiteName: "test.AppSettingsTests.\(UUID().uuidString)")!
-        let settings = AppSettings(defaults: defaults)
+        let settings = AppSettings(defaults: makeDefaults(suiteName: "test.AppSettingsTests.weekStartDayDefaultsToSystemCalendar"))
         let expected = Calendar.current.firstWeekday == 1 ? 1 : 2
         #expect(settings.weekStartDay == expected)
     }
 
     @Test func weekStartDayPersists() {
-        let suiteName = "test.AppSettingsTests.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suiteName)!
+        let defaults = makeDefaults(suiteName: "test.AppSettingsTests.weekStartDayPersists")
         let settings = AppSettings(defaults: defaults)
         settings.weekStartDay = 1
         settings.save()
