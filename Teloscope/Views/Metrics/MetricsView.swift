@@ -63,9 +63,10 @@ struct MetricsView: View {
     }
 
     private func refresh() {
+        let effectiveRange = DateInterval(start: dateRange.start, end: max(dateRange.end, Date()))
         dashboardModel.refresh(
             container: modelContext.container,
-            dateRange: dateRange,
+            dateRange: effectiveRange,
             selectedModels: selectedModels
         )
     }
