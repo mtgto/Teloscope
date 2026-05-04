@@ -34,6 +34,11 @@ struct SetupGuideView: View {
                     .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
             )
 
+            Text("Optional: add \"OTEL_LOG_TOOL_DETAILS\": \"1\" to the env block to show actual skill names in the Skill Usage widget.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
             HStack {
                 Spacer()
                 Button("Copy") {
@@ -47,7 +52,7 @@ struct SetupGuideView: View {
             }
         }
         .padding(24)
-        .frame(width: 480, height: 420)
+        .frame(width: 480, height: 460)
     }
 
     @ViewBuilder
