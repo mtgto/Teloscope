@@ -77,18 +77,31 @@ final class OTLPIngestionService {
                         lrProto.attributes.map { ($0.key, AttributeValue(anyValue: $0.value)) },
                         uniquingKeysWith: { first, _ in first }
                     )
-                    guard attrs["event.name"]?.stringValue == "skill_activated" else { continue }
+                    let eventName = attrs["event.name"]?.stringValue
                     let nano = lrProto.timeUnixNano > 0
                         ? lrProto.timeUnixNano
                         : lrProto.observedTimeUnixNano
-                    modelContext.insert(LogEvent(
-                        eventName: "skill_activated",
-                        timestamp: Date(unixNano: nano),
-                        sessionId: attrs["session.id"]?.stringValue,
-                        skillName: attrs["skill.name"]?.stringValue,
-                        invocationTrigger: attrs["invocation_trigger"]?.stringValue,
-                        skillSource: attrs["skill.source"]?.stringValue
-                    ))
+                    if eventName == "skill_activated" {
+                        modelContext.insert(LogEvent(
+                            eventName: "skill_activated",
+                            timestamp: Date(unixNano: nano),
+                            sessionId: attrs["session.id"]?.stringValue,
+                            skillName: attrs["skill.name"]?.stringValue,
+                            invocationTrigger: attrs["invocation_trigger"]?.stringValue,
+                            skillSource: attrs["skill.source"]?.stringValue
+                        ))
+                    } else if eventName == "user_prompt",
+                              let commandName = attrs["command_name"]?.stringValue,
+                              !commandName.isEmpty {
+                        modelContext.insert(LogEvent(
+                            eventName: "user_prompt",
+                            timestamp: Date(unixNano: nano),
+                            sessionId: attrs["session.id"]?.stringValue,
+                            skillName: commandName,
+                            invocationTrigger: "user-slash",
+                            skillSource: attrs["command_source"]?.stringValue
+                        ))
+                    }
                 }
             }
         }

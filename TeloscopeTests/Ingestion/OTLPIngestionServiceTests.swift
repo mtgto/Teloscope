@@ -233,6 +233,8 @@ struct OTLPIngestionServiceTests {
         skillName: String? = nil,
         invocationTrigger: String? = nil,
         skillSource: String? = nil,
+        commandName: String? = nil,
+        commandSource: String? = nil,
         timeUnixNano: UInt64 = 1_000_000_000
     ) throws -> Data {
         func kv(_ key: String, _ value: String) -> Opentelemetry_Proto_Common_V1_KeyValue {
@@ -246,6 +248,8 @@ struct OTLPIngestionServiceTests {
         if let v = skillName         { attrs.append(kv("skill.name", v)) }
         if let v = invocationTrigger { attrs.append(kv("invocation_trigger", v)) }
         if let v = skillSource       { attrs.append(kv("skill.source", v)) }
+        if let v = commandName       { attrs.append(kv("command_name", v)) }
+        if let v = commandSource     { attrs.append(kv("command_source", v)) }
         logRecord.attributes = attrs
 
         var scopeLogs = Opentelemetry_Proto_Logs_V1_ScopeLogs()
@@ -280,7 +284,41 @@ struct OTLPIngestionServiceTests {
         #expect(events[0].skillSource == "userSettings")
     }
 
-    @Test func ignoresNonSkillActivatedLogEvents() throws {
+    @Test func ingestsUserPromptLogEventWithCommandName() throws {
+        let container = try makeContainer()
+        let ctx = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: ctx)
+
+        let data = try makeLogRequest(
+            eventName: "user_prompt",
+            sessionId: "sess-xyz",
+            commandName: "otel-test",
+            commandSource: "custom"
+        )
+        service.ingest(.logs(data))
+
+        let events = try ctx.fetch(FetchDescriptor<LogEvent>())
+        #expect(events.count == 1)
+        #expect(events[0].eventName == "user_prompt")
+        #expect(events[0].sessionId == "sess-xyz")
+        #expect(events[0].skillName == "otel-test")
+        #expect(events[0].invocationTrigger == "user-slash")
+        #expect(events[0].skillSource == "custom")
+    }
+
+    @Test func ignoresUserPromptWithoutCommandName() throws {
+        let container = try makeContainer()
+        let ctx = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: ctx)
+
+        let data = try makeLogRequest(eventName: "user_prompt")
+        service.ingest(.logs(data))
+
+        let events = try ctx.fetch(FetchDescriptor<LogEvent>())
+        #expect(events.isEmpty)
+    }
+
+    @Test func ignoresOtherLogEvents() throws {
         let container = try makeContainer()
         let ctx = ModelContext(container)
         let service = OTLPIngestionService(modelContext: ctx)

@@ -148,6 +148,12 @@ struct MetricsRepositoryTests {
             skillName: "superpowers:brainstorming"
         ))
         ctx.insert(LogEvent(
+            eventName: "user_prompt",
+            timestamp: now,
+            skillName: "otel-test",
+            invocationTrigger: "user-slash"
+        ))
+        ctx.insert(LogEvent(
             eventName: "skill_activated",
             timestamp: now.addingTimeInterval(-7200), // outside range
             skillName: "update-config"
@@ -157,8 +163,10 @@ struct MetricsRepositoryTests {
         let repo = MetricsRepository(modelContainer: container)
         let range = DateInterval(start: now.addingTimeInterval(-1), end: now.addingTimeInterval(1))
         let (_, summary) = try await repo.computeSummary(dateRange: range, selectedModels: [])
-        #expect(summary.skillRanking.count == 1)
-        #expect(summary.skillRanking[0].name == "superpowers:brainstorming")
+        #expect(summary.claudeSkillRanking.count == 1)
+        #expect(summary.claudeSkillRanking[0].name == "superpowers:brainstorming")
+        #expect(summary.userSkillRanking.count == 1)
+        #expect(summary.userSkillRanking[0].name == "otel-test")
     }
 
     // MARK: - Multiple spans aggregation

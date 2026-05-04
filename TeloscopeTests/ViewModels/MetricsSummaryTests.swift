@@ -144,43 +144,70 @@ struct MetricsSummaryTests {
 
     // MARK: - Helpers for LogEvent
 
-    private func logSnap(
-        skillName: String?,
-        at date: Date = Date()
-    ) -> LogEventSnapshot {
-        LogEventSnapshot(LogEvent(
-            eventName: "skill_activated",
-            timestamp: date,
-            skillName: skillName
-        ))
+    private func claudeSnap(skillName: String?, at date: Date = Date()) -> LogEventSnapshot {
+        LogEventSnapshot(LogEvent(eventName: "skill_activated", timestamp: date, skillName: skillName))
     }
 
-    // MARK: - skillRanking
+    private func userSnap(skillName: String?, at date: Date = Date()) -> LogEventSnapshot {
+        LogEventSnapshot(LogEvent(eventName: "user_prompt", timestamp: date, skillName: skillName, invocationTrigger: "user-slash"))
+    }
 
-    @Test func skillRankingCountsSkillEvents() {
+    // MARK: - claudeSkillRanking
+
+    @Test func claudeSkillRankingCountsSkillActivatedEvents() {
         let events = [
-            logSnap(skillName: "superpowers:brainstorming"),
-            logSnap(skillName: "superpowers:brainstorming"),
-            logSnap(skillName: "update-config"),
+            claudeSnap(skillName: "superpowers:brainstorming"),
+            claudeSnap(skillName: "superpowers:brainstorming"),
+            claudeSnap(skillName: "update-config"),
         ]
         let summary = MetricsSummary(spans: [], logEvents: events, dateRange: fullRange)
-        #expect(summary.skillRanking.count == 2)
-        #expect(summary.skillRanking[0] == (name: "superpowers:brainstorming", count: 2))
-        #expect(summary.skillRanking[1] == (name: "update-config", count: 1))
+        #expect(summary.claudeSkillRanking.count == 2)
+        #expect(summary.claudeSkillRanking[0] == (name: "superpowers:brainstorming", count: 2))
+        #expect(summary.claudeSkillRanking[1] == (name: "update-config", count: 1))
     }
 
-    @Test func skillRankingIgnoresNilSkillName() {
-        let events = [
-            logSnap(skillName: "superpowers:brainstorming"),
-            logSnap(skillName: nil),
-        ]
+    @Test func claudeSkillRankingIgnoresNilSkillName() {
+        let events = [claudeSnap(skillName: "superpowers:brainstorming"), claudeSnap(skillName: nil)]
         let summary = MetricsSummary(spans: [], logEvents: events, dateRange: fullRange)
-        #expect(summary.skillRanking.count == 1)
-        #expect(summary.skillRanking[0].name == "superpowers:brainstorming")
+        #expect(summary.claudeSkillRanking.count == 1)
+        #expect(summary.claudeSkillRanking[0].name == "superpowers:brainstorming")
     }
 
-    @Test func skillRankingIsEmptyWithNoEvents() {
+    @Test func claudeSkillRankingIsEmptyWithNoEvents() {
         let summary = MetricsSummary(spans: [], logEvents: [], dateRange: fullRange)
-        #expect(summary.skillRanking.isEmpty)
+        #expect(summary.claudeSkillRanking.isEmpty)
+    }
+
+    // MARK: - userSkillRanking
+
+    @Test func userSkillRankingCountsUserPromptEvents() {
+        let events = [
+            userSnap(skillName: "otel-test"),
+            userSnap(skillName: "otel-test"),
+            userSnap(skillName: "simplify"),
+        ]
+        let summary = MetricsSummary(spans: [], logEvents: events, dateRange: fullRange)
+        #expect(summary.userSkillRanking.count == 2)
+        #expect(summary.userSkillRanking[0] == (name: "otel-test", count: 2))
+        #expect(summary.userSkillRanking[1] == (name: "simplify", count: 1))
+    }
+
+    @Test func userSkillRankingIgnoresNilSkillName() {
+        let events = [userSnap(skillName: "otel-test"), userSnap(skillName: nil)]
+        let summary = MetricsSummary(spans: [], logEvents: events, dateRange: fullRange)
+        #expect(summary.userSkillRanking.count == 1)
+        #expect(summary.userSkillRanking[0].name == "otel-test")
+    }
+
+    @Test func skillRankingsAreSeparatedByEventName() {
+        let events = [
+            claudeSnap(skillName: "simplify"),
+            userSnap(skillName: "otel-test"),
+        ]
+        let summary = MetricsSummary(spans: [], logEvents: events, dateRange: fullRange)
+        #expect(summary.claudeSkillRanking.count == 1)
+        #expect(summary.claudeSkillRanking[0].name == "simplify")
+        #expect(summary.userSkillRanking.count == 1)
+        #expect(summary.userSkillRanking[0].name == "otel-test")
     }
 }

@@ -79,7 +79,8 @@ struct MetricsView: View {
                 approvalWidget(m)
                 modelWidget(m)
                 toolRankingWidget(m)
-                skillRankingWidget(m)
+                userSkillRankingWidget(m)
+                claudeSkillRankingWidget(m)
                 usageHeatmapWidget(m)
                 tokensTimelineWidget(m)
                 costTimelineWidget(m)
@@ -205,10 +206,17 @@ struct MetricsView: View {
         )
     }
 
-    private func skillRankingWidget(_ m: MetricsSummary?) -> some View {
+    private func userSkillRankingWidget(_ m: MetricsSummary?) -> some View {
         BarWidgetView(
-            title: "Skill Usage",
-            items: m?.skillRanking ?? []
+            title: "User Skill Usage",
+            items: m?.userSkillRanking ?? []
+        )
+    }
+
+    private func claudeSkillRankingWidget(_ m: MetricsSummary?) -> some View {
+        BarWidgetView(
+            title: "Claude Skill Usage",
+            items: m?.claudeSkillRanking ?? []
         )
     }
 
