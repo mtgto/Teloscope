@@ -13,5 +13,5 @@ runs:
     run: |
       set -o pipefail
       xcodebuild -scheme Teloscope test \
-        -only-testing TeloscopeTests/PreviewSnapshotTests \
+        -testPlan VRT \
         | xcbeautify
