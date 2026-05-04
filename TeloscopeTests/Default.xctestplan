@@ -1,0 +1,31 @@
+{
+  "configurations" : [
+    {
+      "id" : "48920681-A197-4A33-8663-B81B995E4727",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "skippedTests" : {
+        "suites" : [
+          {
+            "name" : "PreviewSnapshotTests"
+          }
+        ]
+      },
+      "target" : {
+        "containerPath" : "container:Teloscope.xcodeproj",
+        "identifier" : "CEA9451F2F8E5AD60006E40E",
+        "name" : "TeloscopeTests"
+      }
+    }
+  ],
+  "version" : 2
+}

@@ -1,0 +1,58 @@
+{
+  "configurations" : [
+    {
+      "id" : "38CB59B9-DD7F-4C5E-B4EC-9BF2E9FA31AD",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "skippedTests" : {
+        "suites" : [
+          {
+            "name" : "AppSettingsTests"
+          },
+          {
+            "name" : "MetricsDashboardModelTests"
+          },
+          {
+            "name" : "MetricsRepositoryTests"
+          },
+          {
+            "name" : "MetricsSummaryTests"
+          },
+          {
+            "name" : "ModelPricingTests"
+          },
+          {
+            "name" : "OTLPIngestionServiceTests"
+          },
+          {
+            "name" : "OTLPServerTests"
+          },
+          {
+            "name" : "SetupGuideViewTests"
+          },
+          {
+            "name" : "SpanTests"
+          },
+          {
+            "name" : "TeloscopeTests"
+          }
+        ]
+      },
+      "target" : {
+        "containerPath" : "container:Teloscope.xcodeproj",
+        "identifier" : "CEA9451F2F8E5AD60006E40E",
+        "name" : "TeloscopeTests"
+      }
+    }
+  ],
+  "version" : 2
+}

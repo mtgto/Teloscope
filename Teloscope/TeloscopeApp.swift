@@ -24,7 +24,11 @@ struct TeloscopeApp: App {
         }
     }()
 
-    @State private var settings = AppSettings()
+    @State private var settings = AppSettings(
+        defaults: ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            ? UserDefaults(suiteName: UUID().uuidString)!
+            : .standard
+    )
     @State private var server = OTLPServer()
 
     var body: some Scene {
