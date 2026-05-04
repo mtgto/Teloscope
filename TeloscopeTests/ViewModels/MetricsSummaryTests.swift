@@ -141,4 +141,46 @@ struct MetricsSummaryTests {
         #expect(summary.usageHeatmap.count == 2)
         #expect(summary.usageHeatmap.allSatisfy { $0.count == 1 })
     }
+
+    // MARK: - Helpers for LogEvent
+
+    private func logSnap(
+        skillName: String?,
+        at date: Date = Date()
+    ) -> LogEventSnapshot {
+        LogEventSnapshot(LogEvent(
+            eventName: "skill_activated",
+            timestamp: date,
+            skillName: skillName
+        ))
+    }
+
+    // MARK: - skillRanking
+
+    @Test func skillRankingCountsSkillEvents() {
+        let events = [
+            logSnap(skillName: "superpowers:brainstorming"),
+            logSnap(skillName: "superpowers:brainstorming"),
+            logSnap(skillName: "update-config"),
+        ]
+        let summary = MetricsSummary(spans: [], logEvents: events, dateRange: fullRange)
+        #expect(summary.skillRanking.count == 2)
+        #expect(summary.skillRanking[0] == (name: "superpowers:brainstorming", count: 2))
+        #expect(summary.skillRanking[1] == (name: "update-config", count: 1))
+    }
+
+    @Test func skillRankingIgnoresNilSkillName() {
+        let events = [
+            logSnap(skillName: "superpowers:brainstorming"),
+            logSnap(skillName: nil),
+        ]
+        let summary = MetricsSummary(spans: [], logEvents: events, dateRange: fullRange)
+        #expect(summary.skillRanking.count == 1)
+        #expect(summary.skillRanking[0].name == "superpowers:brainstorming")
+    }
+
+    @Test func skillRankingIsEmptyWithNoEvents() {
+        let summary = MetricsSummary(spans: [], logEvents: [], dateRange: fullRange)
+        #expect(summary.skillRanking.isEmpty)
+    }
 }

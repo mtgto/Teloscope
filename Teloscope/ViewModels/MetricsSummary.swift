@@ -27,6 +27,24 @@ struct SpanSnapshot: Sendable {
     }
 }
 
+struct LogEventSnapshot: Sendable {
+    let eventName: String
+    let timestamp: Date
+    let sessionId: String?
+    let skillName: String?
+    let invocationTrigger: String?
+    let skillSource: String?
+
+    init(_ event: LogEvent) {
+        eventName = event.eventName
+        timestamp = event.timestamp
+        sessionId = event.sessionId
+        skillName = event.skillName
+        invocationTrigger = event.invocationTrigger
+        skillSource = event.skillSource
+    }
+}
+
 enum TimeGranularity {
     case hourly  // date range ≤ 2 days: 1-hour buckets
     case daily   // date range ≤ 30 days: 1-day buckets
@@ -60,6 +78,7 @@ struct MetricsSummary {
     let hasApprovalData: Bool
     let modelDistribution: [(model: String, requestCount: Int)]
     let toolRanking: [(name: String, count: Int)]
+    let skillRanking: [(name: String, count: Int)]
     let usageHeatmap: [(weekday: Int, hour: Int, count: Int)]
     let timeGranularity: TimeGranularity
     let hourlyTokens: [(date: Date, input: Double, output: Double)]
@@ -72,7 +91,7 @@ struct MetricsSummary {
         return Double(approvalCount) / Double(total)
     }
 
-    init(spans: [SpanSnapshot], dateRange: DateInterval) {
+    init(spans: [SpanSnapshot], logEvents: [LogEventSnapshot] = [], dateRange: DateInterval) {
         var costUSD = 0.0
         var inputTokens: Int64 = 0
         var outputTokens: Int64 = 0
@@ -190,5 +209,15 @@ struct MetricsSummary {
         self.hourlyRequests = allBucketDates.compactMap { date in
             requestBuckets[date].map { (date: date, value: $0) }
         }
+
+        var skillCounts: [String: Int] = [:]
+        for event in logEvents {
+            if let name = event.skillName {
+                skillCounts[name, default: 0] += 1
+            }
+        }
+        self.skillRanking = skillCounts
+            .sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
+            .map { (name: $0.key, count: $0.value) }
     }
 }
