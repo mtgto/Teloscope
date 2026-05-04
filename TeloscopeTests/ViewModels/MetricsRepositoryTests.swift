@@ -137,6 +137,30 @@ struct MetricsRepositoryTests {
         #expect(summary.sessionCount == 1)
     }
 
+    // MARK: - Skill ranking
+
+    @Test func skillRankingIncludesLogEventsInDateRange() async throws {
+        let container = try makeContainer()
+        let ctx = ModelContext(container)
+        ctx.insert(LogEvent(
+            eventName: "skill_activated",
+            timestamp: now,
+            skillName: "superpowers:brainstorming"
+        ))
+        ctx.insert(LogEvent(
+            eventName: "skill_activated",
+            timestamp: now.addingTimeInterval(-7200), // outside range
+            skillName: "update-config"
+        ))
+        try ctx.save()
+
+        let repo = MetricsRepository(modelContainer: container)
+        let range = DateInterval(start: now.addingTimeInterval(-1), end: now.addingTimeInterval(1))
+        let (_, summary) = try await repo.computeSummary(dateRange: range, selectedModels: [])
+        #expect(summary.skillRanking.count == 1)
+        #expect(summary.skillRanking[0].name == "superpowers:brainstorming")
+    }
+
     // MARK: - Multiple spans aggregation
 
     @Test func tokenTotalsAggregatedAcrossSpans() async throws {
