@@ -349,7 +349,7 @@ import Testing
     @Test func traceListView_default() throws {
         let container = try ModelContainer(
             for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
-                ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self,
+                ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         renderSnapshot(
@@ -365,7 +365,7 @@ import Testing
     @Test func metricsView_default() throws {
         let container = try ModelContainer(
             for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
-                ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self,
+                ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         renderSnapshot(

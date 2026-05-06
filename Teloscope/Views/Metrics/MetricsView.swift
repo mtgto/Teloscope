@@ -55,12 +55,18 @@ struct MetricsView: View {
                 refresh()
             }
         }
+        .task {
+            for await _ in NotificationCenter.default.notifications(named: .otlpLogsIngested) {
+                refresh()
+            }
+        }
     }
 
     private func refresh() {
+        let effectiveRange = DateInterval(start: dateRange.start, end: max(dateRange.end, Date()))
         dashboardModel.refresh(
             container: modelContext.container,
-            dateRange: dateRange,
+            dateRange: effectiveRange,
             selectedModels: selectedModels
         )
     }
@@ -74,6 +80,8 @@ struct MetricsView: View {
                 approvalWidget(m)
                 modelWidget(m)
                 toolRankingWidget(m)
+                userSkillRankingWidget(m)
+                claudeSkillRankingWidget(m)
                 usageHeatmapWidget(m)
                 tokensTimelineWidget(m)
                 costTimelineWidget(m)
@@ -196,6 +204,20 @@ struct MetricsView: View {
         BarWidgetView(
             title: "Tool Usage",
             items: m?.toolRanking ?? []
+        )
+    }
+
+    private func userSkillRankingWidget(_ m: MetricsSummary?) -> some View {
+        BarWidgetView(
+            title: "User Skill Usage",
+            items: m?.userSkillRanking ?? []
+        )
+    }
+
+    private func claudeSkillRankingWidget(_ m: MetricsSummary?) -> some View {
+        BarWidgetView(
+            title: "Claude Skill Usage",
+            items: m?.claudeSkillRanking ?? []
         )
     }
 

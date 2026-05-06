@@ -11,7 +11,7 @@ struct MetricsRepositoryTests {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         return try ModelContainer(
             for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
-                 ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self,
+                 ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
             configurations: config
         )
     }
@@ -135,6 +135,38 @@ struct MetricsRepositoryTests {
         // Filter selects only opus; haiku LLM span excluded, but tool span passes through
         let (_, summary) = try await repo.computeSummary(dateRange: range, selectedModels: ["claude-opus-4"])
         #expect(summary.sessionCount == 1)
+    }
+
+    // MARK: - Skill ranking
+
+    @Test func skillRankingIncludesLogEventsInDateRange() async throws {
+        let container = try makeContainer()
+        let ctx = ModelContext(container)
+        ctx.insert(LogEvent(
+            eventName: "skill_activated",
+            timestamp: now,
+            skillName: "superpowers:brainstorming"
+        ))
+        ctx.insert(LogEvent(
+            eventName: "user_prompt",
+            timestamp: now,
+            skillName: "otel-test",
+            invocationTrigger: "user-slash"
+        ))
+        ctx.insert(LogEvent(
+            eventName: "skill_activated",
+            timestamp: now.addingTimeInterval(-7200), // outside range
+            skillName: "update-config"
+        ))
+        try ctx.save()
+
+        let repo = MetricsRepository(modelContainer: container)
+        let range = DateInterval(start: now.addingTimeInterval(-1), end: now.addingTimeInterval(1))
+        let (_, summary) = try await repo.computeSummary(dateRange: range, selectedModels: [])
+        #expect(summary.claudeSkillRanking.count == 1)
+        #expect(summary.claudeSkillRanking[0].name == "superpowers:brainstorming")
+        #expect(summary.userSkillRanking.count == 1)
+        #expect(summary.userSkillRanking[0].name == "otel-test")
     }
 
     // MARK: - Multiple spans aggregation

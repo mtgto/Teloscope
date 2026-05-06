@@ -66,8 +66,47 @@ final class OTLPIngestionService {
     }
 
     private func ingestLogs(_ data: Data) {
+        guard let proto = try? Opentelemetry_Proto_Collector_Logs_V1_ExportLogsServiceRequest(
+            serializedBytes: data
+        ) else { return }
         modelContext.insert(ResourceLogs(rawData: data))
+        for rlProto in proto.resourceLogs {
+            for slProto in rlProto.scopeLogs {
+                for lrProto in slProto.logRecords {
+                    let attrs = Dictionary(
+                        lrProto.attributes.map { ($0.key, AttributeValue(anyValue: $0.value)) },
+                        uniquingKeysWith: { first, _ in first }
+                    )
+                    let eventName = attrs["event.name"]?.stringValue
+                    let nano = lrProto.timeUnixNano > 0
+                        ? lrProto.timeUnixNano
+                        : lrProto.observedTimeUnixNano
+                    if eventName == "skill_activated" {
+                        modelContext.insert(LogEvent(
+                            eventName: "skill_activated",
+                            timestamp: Date(unixNano: nano),
+                            sessionId: attrs["session.id"]?.stringValue,
+                            skillName: attrs["skill.name"]?.stringValue,
+                            invocationTrigger: attrs["invocation_trigger"]?.stringValue,
+                            skillSource: attrs["skill.source"]?.stringValue
+                        ))
+                    } else if eventName == "user_prompt",
+                              let commandName = attrs["command_name"]?.stringValue,
+                              !commandName.isEmpty {
+                        modelContext.insert(LogEvent(
+                            eventName: "user_prompt",
+                            timestamp: Date(unixNano: nano),
+                            sessionId: attrs["session.id"]?.stringValue,
+                            skillName: commandName,
+                            invocationTrigger: "user-slash",
+                            skillSource: attrs["command_source"]?.stringValue
+                        ))
+                    }
+                }
+            }
+        }
         try? modelContext.save()
+        NotificationCenter.default.post(name: .otlpLogsIngested, object: nil)
     }
 
     func backfillTypedColumns() {
@@ -98,8 +137,8 @@ final class OTLPIngestionService {
 // MARK: - Notifications
 
 extension Notification.Name {
-    /// Posted on the main thread after OTLP span data is saved or deleted.
     static let otlpSpansIngested = Notification.Name("com.teloscope.otlpSpansIngested")
+    static let otlpLogsIngested = Notification.Name("com.teloscope.otlpLogsIngested")
 }
 
 // MARK: - Private helpers

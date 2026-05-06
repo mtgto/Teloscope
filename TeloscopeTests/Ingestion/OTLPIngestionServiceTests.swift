@@ -10,9 +10,27 @@ struct OTLPIngestionServiceTests {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         return try ModelContainer(
             for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
-            ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self,
+            ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
             configurations: config
         )
+    }
+
+    @Test func logEventCanBeInserted() throws {
+        let container = try makeContainer()
+        let ctx = ModelContext(container)
+        let event = LogEvent(
+            eventName: "skill_activated",
+            timestamp: Date(),
+            sessionId: "sess-1",
+            skillName: "superpowers:brainstorming",
+            invocationTrigger: "claude-proactive",
+            skillSource: "userSettings"
+        )
+        ctx.insert(event)
+        try ctx.save()
+        let fetched = try ctx.fetch(FetchDescriptor<LogEvent>())
+        #expect(fetched.count == 1)
+        #expect(fetched[0].skillName == "superpowers:brainstorming")
     }
 
     @Test func ingestsSpanFromTracesRequest() throws {
@@ -205,6 +223,127 @@ struct OTLPIngestionServiceTests {
 
         let fetched = try context.fetch(FetchDescriptor<OTLPSpan>())
         #expect(fetched.first?.toolName == nil)
+    }
+
+    // MARK: - Log ingestion helpers
+
+    private func makeLogRequest(
+        eventName: String,
+        sessionId: String? = nil,
+        skillName: String? = nil,
+        invocationTrigger: String? = nil,
+        skillSource: String? = nil,
+        commandName: String? = nil,
+        commandSource: String? = nil,
+        timeUnixNano: UInt64 = 1_000_000_000
+    ) throws -> Data {
+        func kv(_ key: String, _ value: String) -> Opentelemetry_Proto_Common_V1_KeyValue {
+            var kv = Opentelemetry_Proto_Common_V1_KeyValue()
+            kv.key = key; kv.value.stringValue = value; return kv
+        }
+        var logRecord = Opentelemetry_Proto_Logs_V1_LogRecord()
+        logRecord.timeUnixNano = timeUnixNano
+        var attrs = [kv("event.name", eventName)]
+        if let v = sessionId         { attrs.append(kv("session.id", v)) }
+        if let v = skillName         { attrs.append(kv("skill.name", v)) }
+        if let v = invocationTrigger { attrs.append(kv("invocation_trigger", v)) }
+        if let v = skillSource       { attrs.append(kv("skill.source", v)) }
+        if let v = commandName       { attrs.append(kv("command_name", v)) }
+        if let v = commandSource     { attrs.append(kv("command_source", v)) }
+        logRecord.attributes = attrs
+
+        var scopeLogs = Opentelemetry_Proto_Logs_V1_ScopeLogs()
+        scopeLogs.logRecords = [logRecord]
+        var resourceLogs = Opentelemetry_Proto_Logs_V1_ResourceLogs()
+        resourceLogs.scopeLogs = [scopeLogs]
+        var request = Opentelemetry_Proto_Collector_Logs_V1_ExportLogsServiceRequest()
+        request.resourceLogs = [resourceLogs]
+        return try request.serializedData()
+    }
+
+    @Test func ingestsSkillActivatedLogEvent() throws {
+        let container = try makeContainer()
+        let ctx = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: ctx)
+
+        let data = try makeLogRequest(
+            eventName: "skill_activated",
+            sessionId: "sess-abc",
+            skillName: "superpowers:brainstorming",
+            invocationTrigger: "claude-proactive",
+            skillSource: "userSettings"
+        )
+        service.ingest(.logs(data))
+
+        let events = try ctx.fetch(FetchDescriptor<LogEvent>())
+        #expect(events.count == 1)
+        #expect(events[0].eventName == "skill_activated")
+        #expect(events[0].sessionId == "sess-abc")
+        #expect(events[0].skillName == "superpowers:brainstorming")
+        #expect(events[0].invocationTrigger == "claude-proactive")
+        #expect(events[0].skillSource == "userSettings")
+    }
+
+    @Test func ingestsUserPromptLogEventWithCommandName() throws {
+        let container = try makeContainer()
+        let ctx = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: ctx)
+
+        let data = try makeLogRequest(
+            eventName: "user_prompt",
+            sessionId: "sess-xyz",
+            commandName: "otel-test",
+            commandSource: "custom"
+        )
+        service.ingest(.logs(data))
+
+        let events = try ctx.fetch(FetchDescriptor<LogEvent>())
+        #expect(events.count == 1)
+        #expect(events[0].eventName == "user_prompt")
+        #expect(events[0].sessionId == "sess-xyz")
+        #expect(events[0].skillName == "otel-test")
+        #expect(events[0].invocationTrigger == "user-slash")
+        #expect(events[0].skillSource == "custom")
+    }
+
+    @Test func ignoresUserPromptWithoutCommandName() throws {
+        let container = try makeContainer()
+        let ctx = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: ctx)
+
+        let data = try makeLogRequest(eventName: "user_prompt")
+        service.ingest(.logs(data))
+
+        let events = try ctx.fetch(FetchDescriptor<LogEvent>())
+        #expect(events.isEmpty)
+    }
+
+    @Test func ignoresOtherLogEvents() throws {
+        let container = try makeContainer()
+        let ctx = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: ctx)
+
+        let data = try makeLogRequest(eventName: "api_request")
+        service.ingest(.logs(data))
+
+        let events = try ctx.fetch(FetchDescriptor<LogEvent>())
+        #expect(events.isEmpty)
+    }
+
+    @Test func ingestLogsPostsOtlpLogsIngestedNotification() throws {
+        let container = try makeContainer()
+        let ctx = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: ctx)
+
+        var notified = false
+        let token = NotificationCenter.default.addObserver(
+            forName: .otlpLogsIngested, object: nil, queue: .main
+        ) { _ in notified = true }
+        defer { NotificationCenter.default.removeObserver(token) }
+
+        let data = try makeLogRequest(eventName: "skill_activated")
+        service.ingest(.logs(data))
+        #expect(notified)
     }
 
     @Test func deletesSpansOlderThanRetentionDays() throws {

@@ -42,6 +42,8 @@ A macOS 14+ app that acts as an OpenTelemetry collector. It receives OTLP/HTTP s
 
 5. Start using Claude Code — traces will appear in Teloscope automatically
 
+> **Skill Ranking:** The Metrics dashboard includes a Skill Usage widget that shows which Claude Code skills were invoked most often. By default, Claude Code redacts skill names and reports them as `"custom_skill"`. To see actual skill names, add `"OTEL_LOG_TOOL_DETAILS": "1"` to the `env` block above.
+
 ## Installation
 
 1. Mount the `.dmg` file and drag `Teloscope.app` to `/Applications`
