@@ -25,7 +25,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		CE939B162FA83A8900D1F1E0 /* Default.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; name = Default.xctestplan; path = TeloscopeTests/Default.xctestplan; sourceTree = "<group>"; };
 		CEA945112F8E5AD20006E40E /* Teloscope.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Teloscope.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEA945202F8E5AD60006E40E /* TeloscopeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TeloscopeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -69,7 +68,6 @@
 		CEA945082F8E5AD20006E40E = {
 			isa = PBXGroup;
 			children = (
-				CE939B162FA83A8900D1F1E0 /* Default.xctestplan */,
 				CEA945132F8E5AD20006E40E /* Teloscope */,
 				CEA945232F8E5AD60006E40E /* TeloscopeTests */,
 				CEA945122F8E5AD20006E40E /* Products */,
