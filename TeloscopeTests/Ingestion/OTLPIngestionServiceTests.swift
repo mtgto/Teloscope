@@ -11,6 +11,7 @@ struct OTLPIngestionServiceTests {
         return try ModelContainer(
             for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
             ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
+            OTLPNumberDataPoint.self,
             configurations: config
         )
     }
@@ -344,6 +345,82 @@ struct OTLPIngestionServiceTests {
         let data = try makeLogRequest(eventName: "skill_activated")
         service.ingest(.logs(data))
         #expect(notified)
+    }
+
+    // MARK: - Metrics ingestion
+
+    @Test func ingestsNumberDataPointsFromMetricsRequest() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: context)
+
+        var dp = Opentelemetry_Proto_Metrics_V1_NumberDataPoint()
+        dp.timeUnixNano = 2_000_000_000
+        dp.asInt = 50
+        var typeAttr = Opentelemetry_Proto_Common_V1_KeyValue()
+        typeAttr.key = "type"
+        typeAttr.value.stringValue = "added"
+        dp.attributes = [typeAttr]
+
+        var sum = Opentelemetry_Proto_Metrics_V1_Sum()
+        sum.dataPoints = [dp]
+
+        var metric = Opentelemetry_Proto_Metrics_V1_Metric()
+        metric.name = "claude_code.lines_of_code.count"
+        metric.unit = "{lines}"
+        metric.sum = sum
+
+        var sm = Opentelemetry_Proto_Metrics_V1_ScopeMetrics()
+        sm.metrics = [metric]
+
+        var rm = Opentelemetry_Proto_Metrics_V1_ResourceMetrics()
+        rm.scopeMetrics = [sm]
+
+        var request = Opentelemetry_Proto_Collector_Metrics_V1_ExportMetricsServiceRequest()
+        request.resourceMetrics = [rm]
+
+        service.ingest(.metrics(try request.serializedData()))
+
+        let fetched = try context.fetch(FetchDescriptor<OTLPNumberDataPoint>())
+        #expect(fetched.count == 1)
+        #expect(fetched[0].metricName == "claude_code.lines_of_code.count")
+        #expect(fetched[0].metricUnit == "{lines}")
+        #expect(fetched[0].value == 50.0)
+        #expect(fetched[0].timestamp == Date(timeIntervalSince1970: 2.0))
+        #expect(fetched[0].attributesJSON.contains("added"))
+    }
+
+    @Test func ingestsGaugeDataPoints() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: context)
+
+        var dp = Opentelemetry_Proto_Metrics_V1_NumberDataPoint()
+        dp.timeUnixNano = 1_000_000_000
+        dp.asDouble = 3.14
+
+        var gauge = Opentelemetry_Proto_Metrics_V1_Gauge()
+        gauge.dataPoints = [dp]
+
+        var metric = Opentelemetry_Proto_Metrics_V1_Metric()
+        metric.name = "some.gauge"
+        metric.gauge = gauge
+
+        var sm = Opentelemetry_Proto_Metrics_V1_ScopeMetrics()
+        sm.metrics = [metric]
+
+        var rm = Opentelemetry_Proto_Metrics_V1_ResourceMetrics()
+        rm.scopeMetrics = [sm]
+
+        var request = Opentelemetry_Proto_Collector_Metrics_V1_ExportMetricsServiceRequest()
+        request.resourceMetrics = [rm]
+
+        service.ingest(.metrics(try request.serializedData()))
+
+        let fetched = try context.fetch(FetchDescriptor<OTLPNumberDataPoint>())
+        #expect(fetched.count == 1)
+        #expect(fetched[0].metricName == "some.gauge")
+        #expect(fetched[0].value == 3.14)
     }
 
     @Test func deletesSpansOlderThanRetentionDays() throws {

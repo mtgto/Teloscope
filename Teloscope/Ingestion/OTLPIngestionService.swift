@@ -61,8 +61,53 @@ final class OTLPIngestionService {
     }
 
     private func ingestMetrics(_ data: Data) {
-        modelContext.insert(ResourceMetrics(rawData: data))
+        guard let proto = try? Opentelemetry_Proto_Collector_Metrics_V1_ExportMetricsServiceRequest(
+            serializedBytes: data
+        ) else { return }
+        for rmProto in proto.resourceMetrics {
+            for smProto in rmProto.scopeMetrics {
+                for metric in smProto.metrics {
+                    let dataPoints: [Opentelemetry_Proto_Metrics_V1_NumberDataPoint]
+                    switch metric.data {
+                    case .sum(let sum):     dataPoints = sum.dataPoints
+                    case .gauge(let gauge): dataPoints = gauge.dataPoints
+                    default: continue
+                    }
+                    for dp in dataPoints {
+                        let value: Double
+                        switch dp.value {
+                        case .asDouble(let d): value = d
+                        case .asInt(let i):    value = Double(i)
+                        default: continue
+                        }
+                        let attrs = Dictionary(
+                            dp.attributes.map { ($0.key, AttributeValue(anyValue: $0.value)) },
+                            uniquingKeysWith: { first, _ in first }
+                        )
+                        let attrsString: [String: String] = attrs.reduce(into: [:]) { result, pair in
+                            switch pair.value {
+                            case .string(let s):      result[pair.key] = s
+                            case .int64(let i):       result[pair.key] = String(i)
+                            case .double(let d):      result[pair.key] = String(d)
+                            case .bool(let b):        result[pair.key] = String(b)
+                            case .stringArray(let a): result[pair.key] = a.joined(separator: ",")
+                            }
+                        }
+                        let attrsJSON = (try? JSONEncoder().encode(attrsString))
+                            .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+                        modelContext.insert(OTLPNumberDataPoint(
+                            metricName: metric.name,
+                            metricUnit: metric.unit,
+                            timestamp: Date(unixNano: dp.timeUnixNano),
+                            value: value,
+                            attributesJSON: attrsJSON
+                        ))
+                    }
+                }
+            }
+        }
         try? modelContext.save()
+        NotificationCenter.default.post(name: .otlpMetricsIngested, object: nil)
     }
 
     private func ingestLogs(_ data: Data) {
@@ -137,8 +182,9 @@ final class OTLPIngestionService {
 // MARK: - Notifications
 
 extension Notification.Name {
-    static let otlpSpansIngested = Notification.Name("com.teloscope.otlpSpansIngested")
-    static let otlpLogsIngested = Notification.Name("com.teloscope.otlpLogsIngested")
+    static let otlpSpansIngested   = Notification.Name("com.teloscope.otlpSpansIngested")
+    static let otlpLogsIngested    = Notification.Name("com.teloscope.otlpLogsIngested")
+    static let otlpMetricsIngested = Notification.Name("com.teloscope.otlpMetricsIngested")
 }
 
 // MARK: - Private helpers
