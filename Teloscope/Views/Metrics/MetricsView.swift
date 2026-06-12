@@ -256,7 +256,8 @@ struct MetricsView: View {
     MetricsView()
         .modelContainer(
             for: [ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
-                  ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self],
+                  ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self,
+                  OTLPNumberDataPoint.self],
             inMemory: true
         )
 }

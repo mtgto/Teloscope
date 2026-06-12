@@ -174,6 +174,8 @@ final class OTLPIngestionService {
         guard let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: Date()) else { return }
         let predicate = #Predicate<OTLPSpan> { $0.startTime < cutoff }
         try? modelContext.delete(model: OTLPSpan.self, where: predicate)
+        let metricPredicate = #Predicate<OTLPNumberDataPoint> { $0.timestamp < cutoff }
+        try? modelContext.delete(model: OTLPNumberDataPoint.self, where: metricPredicate)
         try? modelContext.save()
         NotificationCenter.default.post(name: .otlpSpansIngested, object: nil)
     }

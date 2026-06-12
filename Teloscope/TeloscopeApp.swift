@@ -16,6 +16,7 @@ struct TeloscopeApp: App {
             ResourceMetrics.self,
             ResourceLogs.self,
             LogEvent.self,
+            OTLPNumberDataPoint.self,
         ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
