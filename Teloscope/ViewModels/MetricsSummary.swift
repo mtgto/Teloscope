@@ -45,6 +45,20 @@ struct LogEventSnapshot: Sendable {
     }
 }
 
+struct NumberDataPointSnapshot: Sendable {
+    let metricName: String
+    let timestamp: Date
+    let value: Double
+    let attributesJSON: String
+
+    init(_ point: OTLPNumberDataPoint) {
+        metricName = point.metricName
+        timestamp = point.timestamp
+        value = point.value
+        attributesJSON = point.attributesJSON
+    }
+}
+
 enum TimeGranularity {
     case hourly  // date range ≤ 2 days: 1-hour buckets
     case daily   // date range ≤ 30 days: 1-day buckets
@@ -85,6 +99,8 @@ struct MetricsSummary {
     let hourlyTokens: [(date: Date, input: Double, output: Double)]
     let hourlyCost: [(date: Date, value: Double)]
     let hourlyRequests: [(date: Date, value: Double)]
+    let linesOfCodeAdded: Int64
+    let linesOfCodeRemoved: Int64
 
     var approvalRate: Double? {
         let total = approvalCount + rejectionCount
@@ -92,7 +108,7 @@ struct MetricsSummary {
         return Double(approvalCount) / Double(total)
     }
 
-    init(spans: [SpanSnapshot], logEvents: [LogEventSnapshot] = [], dateRange: DateInterval) {
+    init(spans: [SpanSnapshot], logEvents: [LogEventSnapshot] = [], numberDataPoints: [NumberDataPointSnapshot] = [], dateRange: DateInterval) {
         var costUSD = 0.0
         var inputTokens: Int64 = 0
         var outputTokens: Int64 = 0
@@ -227,5 +243,21 @@ struct MetricsSummary {
         }
         self.userSkillRanking = sort(userSkillCounts)
         self.claudeSkillRanking = sort(claudeSkillCounts)
+
+        var linesAdded: Int64 = 0
+        var linesRemoved: Int64 = 0
+        for dp in numberDataPoints where dp.metricName == "claude_code.lines_of_code.count" {
+            guard let data = dp.attributesJSON.data(using: .utf8),
+                  let attrs = try? JSONDecoder().decode([String: String].self, from: data),
+                  let lineType = attrs["type"]
+            else { continue }
+            switch lineType {
+            case "added":   linesAdded   += Int64(dp.value)
+            case "removed": linesRemoved += Int64(dp.value)
+            default: break
+            }
+        }
+        self.linesOfCodeAdded   = linesAdded
+        self.linesOfCodeRemoved = linesRemoved
     }
 }
