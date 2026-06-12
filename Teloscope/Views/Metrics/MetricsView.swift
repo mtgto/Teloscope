@@ -60,6 +60,11 @@ struct MetricsView: View {
                 refresh()
             }
         }
+        .task {
+            for await _ in NotificationCenter.default.notifications(named: .otlpMetricsIngested) {
+                refresh()
+            }
+        }
     }
 
     private func refresh() {
@@ -77,6 +82,7 @@ struct MetricsView: View {
                 costWidget(m)
                 tokensWidget(m)
                 sessionsWidget(m)
+                linesOfCodeWidget(m)
                 approvalWidget(m)
                 modelWidget(m)
                 toolRankingWidget(m)
@@ -117,6 +123,18 @@ struct MetricsView: View {
             title: "Sessions",
             primaryValue: m?.sessionCount.formatted(.number) ?? "000",
             rows: []
+        )
+    }
+
+    private func linesOfCodeWidget(_ m: MetricsSummary?) -> some View {
+        let total = m.map { $0.linesOfCodeAdded + $0.linesOfCodeRemoved }
+        return StatWidgetView(
+            title: "Lines of Code",
+            primaryValue: total?.formatted(.number) ?? "000",
+            rows: [
+                (label: "Added",   value: m?.linesOfCodeAdded.formatted(.number)   ?? "000"),
+                (label: "Removed", value: m?.linesOfCodeRemoved.formatted(.number) ?? "000"),
+            ]
         )
     }
 
