@@ -423,6 +423,31 @@ struct OTLPIngestionServiceTests {
         #expect(fetched[0].value == 3.14)
     }
 
+    @Test func deletesMetricsOlderThanRetentionDays() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: context)
+
+        let oldDate = Date(timeIntervalSinceNow: -10 * 86400)   // 10 days ago
+        let recentDate = Date(timeIntervalSinceNow: -1 * 86400) // 1 day ago
+
+        context.insert(OTLPNumberDataPoint(
+            metricName: "claude_code.lines_of_code.count",
+            metricUnit: "{lines}", timestamp: oldDate, value: 50, attributesJSON: "{}"
+        ))
+        context.insert(OTLPNumberDataPoint(
+            metricName: "claude_code.lines_of_code.count",
+            metricUnit: "{lines}", timestamp: recentDate, value: 20, attributesJSON: "{}"
+        ))
+        try context.save()
+
+        service.deleteOldData(retentionDays: 7)
+
+        let remaining = try context.fetch(FetchDescriptor<OTLPNumberDataPoint>())
+        #expect(remaining.count == 1)
+        #expect(remaining[0].value == 20.0)
+    }
+
     @Test func deletesSpansOlderThanRetentionDays() throws {
         let container = try makeContainer()
         let context = ModelContext(container)

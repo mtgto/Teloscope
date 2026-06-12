@@ -111,6 +111,16 @@
         }
       }
     },
+    "Added" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "追加"
+          }
+        }
+      }
+    },
     "Apply" : {
       "localizations" : {
         "ja" : {
@@ -624,6 +634,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "拒否 (%lld)"
+          }
+        }
+      }
+    },
+    "Removed" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "削除"
           }
         }
       }
