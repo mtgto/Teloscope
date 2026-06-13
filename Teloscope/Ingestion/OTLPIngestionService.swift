@@ -61,8 +61,49 @@ final class OTLPIngestionService {
     }
 
     private func ingestMetrics(_ data: Data) {
-        modelContext.insert(ResourceMetrics(rawData: data))
+        guard let proto = try? Opentelemetry_Proto_Collector_Metrics_V1_ExportMetricsServiceRequest(
+            serializedBytes: data
+        ) else { return }
+        for rmProto in proto.resourceMetrics {
+            for smProto in rmProto.scopeMetrics {
+                for metric in smProto.metrics {
+                    let dataPoints: [Opentelemetry_Proto_Metrics_V1_NumberDataPoint]
+                    switch metric.data {
+                    case .sum(let sum):     dataPoints = sum.dataPoints
+                    case .gauge(let gauge): dataPoints = gauge.dataPoints
+                    default: continue
+                    }
+                    for dp in dataPoints {
+                        let value: Double
+                        switch dp.value {
+                        case .asDouble(let d): value = d
+                        case .asInt(let i):    value = Double(i)
+                        default: continue
+                        }
+                        let attrs = dp.attributes.compactMap { kv -> MetricAttribute? in
+                            let str: String
+                            switch kv.value.value {
+                            case .stringValue(let s): str = s
+                            case .intValue(let i):    str = String(i)
+                            case .doubleValue(let d): str = String(d)
+                            case .boolValue(let b):   str = String(b)
+                            default: return nil
+                            }
+                            return MetricAttribute(key: kv.key, value: str)
+                        }
+                        modelContext.insert(MetricDataPoint(
+                            metricName: metric.name,
+                            metricUnit: metric.unit,
+                            timestamp: Date(unixNano: dp.timeUnixNano),
+                            value: value,
+                            attributes: attrs
+                        ))
+                    }
+                }
+            }
+        }
         try? modelContext.save()
+        NotificationCenter.default.post(name: .otlpMetricsIngested, object: nil)
     }
 
     private func ingestLogs(_ data: Data) {
@@ -129,6 +170,8 @@ final class OTLPIngestionService {
         guard let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: Date()) else { return }
         let predicate = #Predicate<OTLPSpan> { $0.startTime < cutoff }
         try? modelContext.delete(model: OTLPSpan.self, where: predicate)
+        let metricPredicate = #Predicate<MetricDataPoint> { $0.timestamp < cutoff }
+        try? modelContext.delete(model: MetricDataPoint.self, where: metricPredicate)
         try? modelContext.save()
         NotificationCenter.default.post(name: .otlpSpansIngested, object: nil)
     }
@@ -137,8 +180,9 @@ final class OTLPIngestionService {
 // MARK: - Notifications
 
 extension Notification.Name {
-    static let otlpSpansIngested = Notification.Name("com.teloscope.otlpSpansIngested")
-    static let otlpLogsIngested = Notification.Name("com.teloscope.otlpLogsIngested")
+    static let otlpSpansIngested   = Notification.Name("com.teloscope.otlpSpansIngested")
+    static let otlpLogsIngested    = Notification.Name("com.teloscope.otlpLogsIngested")
+    static let otlpMetricsIngested = Notification.Name("com.teloscope.otlpMetricsIngested")
 }
 
 // MARK: - Private helpers
