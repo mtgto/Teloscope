@@ -2,7 +2,7 @@
 import Foundation
 import SwiftData
 
-/// Metrics are stored as raw data only in the current phase. Visualization is planned for a future phase.
+/// Raw metrics payload kept for reference. Parsed numeric data points are stored in MetricDataPoint.
 @Model
 final class ResourceMetrics {
     var receivedAt: Date
