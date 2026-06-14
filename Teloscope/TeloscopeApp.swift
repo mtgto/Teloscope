@@ -16,6 +16,8 @@ struct TeloscopeApp: App {
             ResourceMetrics.self,
             ResourceLogs.self,
             LogEvent.self,
+            MetricDataPoint.self,
+            MetricAttribute.self,
         ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {

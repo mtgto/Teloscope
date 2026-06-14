@@ -11,6 +11,7 @@ struct OTLPIngestionServiceTests {
         return try ModelContainer(
             for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
             ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
+            MetricAttribute.self, MetricDataPoint.self,
             configurations: config
         )
     }
@@ -372,5 +373,110 @@ struct OTLPIngestionServiceTests {
         let spans = try context.fetch(FetchDescriptor<OTLPSpan>())
         #expect(spans.count == 1)
         #expect(spans[0].name == "recent-span")
+    }
+
+    @Test func ingestsMetricDataPointsFromSumMetric() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: context)
+
+        var dp = Opentelemetry_Proto_Metrics_V1_NumberDataPoint()
+        dp.timeUnixNano = 2_000_000_000
+        dp.asInt = 50
+        var typeAttr = Opentelemetry_Proto_Common_V1_KeyValue()
+        typeAttr.key = "type"
+        typeAttr.value.stringValue = "added"
+        dp.attributes = [typeAttr]
+
+        var sum = Opentelemetry_Proto_Metrics_V1_Sum()
+        sum.dataPoints = [dp]
+
+        var metric = Opentelemetry_Proto_Metrics_V1_Metric()
+        metric.name = "claude_code.lines_of_code.count"
+        metric.unit = "{lines}"
+        metric.sum = sum
+
+        var sm = Opentelemetry_Proto_Metrics_V1_ScopeMetrics()
+        sm.metrics = [metric]
+
+        var rm = Opentelemetry_Proto_Metrics_V1_ResourceMetrics()
+        rm.scopeMetrics = [sm]
+
+        var request = Opentelemetry_Proto_Collector_Metrics_V1_ExportMetricsServiceRequest()
+        request.resourceMetrics = [rm]
+
+        service.ingest(.metrics(try request.serializedData()))
+
+        let fetched = try context.fetch(FetchDescriptor<MetricDataPoint>())
+        #expect(fetched.count == 1)
+        #expect(fetched[0].metricName == "claude_code.lines_of_code.count")
+        #expect(fetched[0].metricUnit == "{lines}")
+        #expect(fetched[0].value == 50.0)
+        #expect(fetched[0].timestamp == Date(timeIntervalSince1970: 2.0))
+        #expect(fetched[0].attributes.count == 1)
+        #expect(fetched[0].attributes[0].key == "type")
+        #expect(fetched[0].attributes[0].value == "added")
+    }
+
+    @Test func ingestsMetricDataPointsFromGaugeMetric() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: context)
+
+        var dp = Opentelemetry_Proto_Metrics_V1_NumberDataPoint()
+        dp.timeUnixNano = 1_000_000_000
+        dp.asDouble = 3.14
+
+        var gauge = Opentelemetry_Proto_Metrics_V1_Gauge()
+        gauge.dataPoints = [dp]
+
+        var metric = Opentelemetry_Proto_Metrics_V1_Metric()
+        metric.name = "some.gauge"
+        metric.gauge = gauge
+
+        var sm = Opentelemetry_Proto_Metrics_V1_ScopeMetrics()
+        sm.metrics = [metric]
+
+        var rm = Opentelemetry_Proto_Metrics_V1_ResourceMetrics()
+        rm.scopeMetrics = [sm]
+
+        var request = Opentelemetry_Proto_Collector_Metrics_V1_ExportMetricsServiceRequest()
+        request.resourceMetrics = [rm]
+
+        service.ingest(.metrics(try request.serializedData()))
+
+        let fetched = try context.fetch(FetchDescriptor<MetricDataPoint>())
+        #expect(fetched.count == 1)
+        #expect(fetched[0].metricName == "some.gauge")
+        #expect(fetched[0].value == 3.14)
+        #expect(fetched[0].attributes.isEmpty)
+    }
+
+    @Test func deletesMetricsOlderThanRetentionDays() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let service = OTLPIngestionService(modelContext: context)
+
+        context.insert(MetricDataPoint(
+            metricName: "claude_code.lines_of_code.count",
+            metricUnit: "{lines}",
+            timestamp: Date(timeIntervalSinceNow: -10 * 86400),
+            value: 50,
+            attributes: []
+        ))
+        context.insert(MetricDataPoint(
+            metricName: "claude_code.lines_of_code.count",
+            metricUnit: "{lines}",
+            timestamp: Date(timeIntervalSinceNow: -1 * 86400),
+            value: 20,
+            attributes: []
+        ))
+        try context.save()
+
+        service.deleteOldData(retentionDays: 7)
+
+        let remaining = try context.fetch(FetchDescriptor<MetricDataPoint>())
+        #expect(remaining.count == 1)
+        #expect(remaining[0].value == 20.0)
     }
 }

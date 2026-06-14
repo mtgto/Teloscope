@@ -4,7 +4,7 @@ import SwiftUI
 struct StatWidgetView: View {
     let title: LocalizedStringKey
     let primaryValue: String
-    let rows: [(label: String, value: String)]
+    let rows: [(label: LocalizedStringKey, value: String)]
 
     var body: some View {
         GroupBox {
@@ -20,13 +20,13 @@ struct StatWidgetView: View {
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Divider()
-                    ForEach(rows, id: \.label) { row in
+                    ForEach(rows.indices, id: \.self) { i in
                         HStack {
-                            Text(LocalizedStringKey(row.label))
+                            Text(rows[i].label)
                                 .foregroundStyle(.secondary)
                                 .font(.caption)
                             Spacer()
-                            Text(row.value)
+                            Text(rows[i].value)
                                 .font(.caption.monospacedDigit())
                         }
                     }

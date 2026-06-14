@@ -210,4 +210,47 @@ struct MetricsSummaryTests {
         #expect(summary.userSkillRanking.count == 1)
         #expect(summary.userSkillRanking[0].name == "otel-test")
     }
+
+    // MARK: - linesOfCode
+
+    private func ndp(_ type: String, value: Double) -> NumberDataPointSnapshot {
+        let attr = MetricAttribute(key: "type", value: type)
+        return NumberDataPointSnapshot(MetricDataPoint(
+            metricName: "claude_code.lines_of_code.count",
+            metricUnit: "{lines}",
+            timestamp: Date(),
+            value: value,
+            attributes: [attr]
+        ))
+    }
+
+    @Test func linesOfCodeSumsAddedAndRemoved() {
+        let points = [ndp("added", value: 100), ndp("added", value: 20), ndp("removed", value: 30)]
+        let summary = MetricsSummary(spans: [], numberDataPoints: points, dateRange: fullRange)
+        #expect(summary.linesOfCodeAdded == 120)
+        #expect(summary.linesOfCodeRemoved == 30)
+    }
+
+    @Test func linesOfCodeZeroWhenNoDataPoints() {
+        let summary = MetricsSummary(spans: [], dateRange: fullRange)
+        #expect(summary.linesOfCodeAdded == 0)
+        #expect(summary.linesOfCodeRemoved == 0)
+    }
+
+    @Test func linesOfCodeIgnoresOtherMetricNames() {
+        let other = NumberDataPointSnapshot(MetricDataPoint(
+            metricName: "other.metric", metricUnit: "",
+            timestamp: Date(), value: 999,
+            attributes: [MetricAttribute(key: "type", value: "added")]
+        ))
+        let summary = MetricsSummary(spans: [], numberDataPoints: [other], dateRange: fullRange)
+        #expect(summary.linesOfCodeAdded == 0)
+    }
+
+    @Test func linesOfCodeIgnoresUnknownType() {
+        let points = [ndp("added", value: 10), ndp("unknown_type", value: 999)]
+        let summary = MetricsSummary(spans: [], numberDataPoints: points, dateRange: fullRange)
+        #expect(summary.linesOfCodeAdded == 10)
+        #expect(summary.linesOfCodeRemoved == 0)
+    }
 }
