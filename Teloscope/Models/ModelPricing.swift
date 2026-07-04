@@ -5,11 +5,14 @@ struct ModelPricing {
     let outputPerMillion: Double
     let cacheReadPerMillion: Double
 
-    // Ordered list — first prefix match wins.
+    // Ordered list — first prefix match wins. Uses standard (non-introductory) pricing.
+    // Source: https://docs.anthropic.com/en/docs/about-claude/pricing
     private static let table: [(prefix: String, pricing: ModelPricing)] = [
-        ("claude-opus-4",    ModelPricing(inputPerMillion: 15.0, outputPerMillion: 75.0,  cacheReadPerMillion: 1.50)),
+        ("claude-fable-5",   ModelPricing(inputPerMillion: 10.0, outputPerMillion: 50.0,  cacheReadPerMillion: 1.00)),
+        ("claude-sonnet-5",  ModelPricing(inputPerMillion:  3.0, outputPerMillion: 15.0,  cacheReadPerMillion: 0.30)),
+        ("claude-opus-4",    ModelPricing(inputPerMillion:  5.0, outputPerMillion: 25.0,  cacheReadPerMillion: 0.50)),
         ("claude-sonnet-4",  ModelPricing(inputPerMillion:  3.0, outputPerMillion: 15.0,  cacheReadPerMillion: 0.30)),
-        ("claude-haiku-4-5", ModelPricing(inputPerMillion:  0.8, outputPerMillion:  4.0,  cacheReadPerMillion: 0.08)),
+        ("claude-haiku-4-5", ModelPricing(inputPerMillion:  1.0, outputPerMillion:  5.0,  cacheReadPerMillion: 0.10)),
     ]
 
     /// Returns pricing for the given model name using prefix matching, or nil if unknown.
