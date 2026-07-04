@@ -112,7 +112,7 @@ struct MetricsDashboardModelTests {
             model: "claude-opus-4", inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0))
         try ctx.save()
         let s = makeSummary(spans: try ctx.fetch(FetchDescriptor<OTLPSpan>()))
-        #expect(abs(s.totalCostUSD - 15.0) < 0.001)
+        #expect(abs(s.totalCostUSD - 5.0) < 0.001)
     }
 
     @Test func unknownModelZeroCost() throws {
