@@ -11,27 +11,43 @@ final class MetricsDashboardModel {
     private(set) var isLoading = false
 
     private var repository: MetricsRepository?
-    private var computeTask: Task<Void, Never>?
+    private var isComputing = false
+    private var pendingRequest: (dateRange: DateInterval, selectedModels: Set<String>)?
 
+    // Coalesces overlapping refresh requests: since `MetricsRepository.computeSummary`
+    // can't be cancelled mid-flight (it's a synchronous SwiftData fetch inside an actor),
+    // rapid-fire calls (e.g. from bursty OTLP ingestion notifications) would otherwise
+    // queue up on the actor and pin the CPU running summaries whose results are immediately
+    // discarded. Instead, a request made while one is already running just replaces the
+    // pending one, so at most one extra computation runs after the in-flight one finishes.
     func refresh(container: ModelContainer, dateRange: DateInterval, selectedModels: Set<String>) {
         if repository == nil {
             repository = MetricsRepository(modelContainer: container)
         }
-        computeTask?.cancel()
+        pendingRequest = (dateRange, selectedModels)
+        guard !isComputing else { return }
         isLoading = true
-        computeTask = Task {
+        runNextPendingRequest()
+    }
+
+    private func runNextPendingRequest() {
+        guard let request = pendingRequest else {
+            isComputing = false
+            isLoading = false
+            return
+        }
+        pendingRequest = nil
+        isComputing = true
+        Task {
             do {
                 let result = try await repository!.computeSummary(
-                    dateRange: dateRange,
-                    selectedModels: selectedModels
+                    dateRange: request.dateRange,
+                    selectedModels: request.selectedModels
                 )
-                guard !Task.isCancelled else { return }
                 availableModels = result.availableModels
                 metrics = result.summary
-            } catch {
-                guard !Task.isCancelled else { return }
-            }
-            isLoading = false
+            } catch {}
+            runNextPendingRequest()
         }
     }
 
