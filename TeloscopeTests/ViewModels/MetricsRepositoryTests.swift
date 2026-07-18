@@ -12,6 +12,7 @@ struct MetricsRepositoryTests {
         return try ModelContainer(
             for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
                  ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
+                 MetricDataPoint.self, MetricAttribute.self,
             configurations: config
         )
     }
@@ -190,5 +191,33 @@ struct MetricsRepositoryTests {
         #expect(summary.totalInputTokens == 1000)
         #expect(summary.totalOutputTokens == 300)
         #expect(summary.totalCacheReadTokens == 200)
+    }
+
+    // MARK: - Metric data points
+
+    @Test func linesOfCodeComputedFromMetricDataPointAttributes() async throws {
+        let container = try makeContainer()
+        let ctx = ModelContext(container)
+        ctx.insert(MetricDataPoint(
+            metricName: "claude_code.lines_of_code.count",
+            metricUnit: "count",
+            timestamp: now,
+            value: 42,
+            attributes: [MetricAttribute(key: "type", value: "added")]
+        ))
+        ctx.insert(MetricDataPoint(
+            metricName: "claude_code.lines_of_code.count",
+            metricUnit: "count",
+            timestamp: now,
+            value: 7,
+            attributes: [MetricAttribute(key: "type", value: "removed")]
+        ))
+        try ctx.save()
+
+        let repo = MetricsRepository(modelContainer: container)
+        let range = DateInterval(start: now.addingTimeInterval(-1), end: now.addingTimeInterval(1))
+        let (_, summary) = try await repo.computeSummary(dateRange: range, selectedModels: [])
+        #expect(summary.linesOfCodeAdded == 42)
+        #expect(summary.linesOfCodeRemoved == 7)
     }
 }
