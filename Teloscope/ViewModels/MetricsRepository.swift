@@ -39,9 +39,12 @@ actor MetricsRepository {
         )
         let logEvents = try modelContext.fetch(logDescriptor).map { LogEventSnapshot($0) }
 
-        let metricDescriptor = FetchDescriptor<MetricDataPoint>(
+        var metricDescriptor = FetchDescriptor<MetricDataPoint>(
             predicate: #Predicate { $0.timestamp >= start && $0.timestamp <= end }
         )
+        // Prefetch the to-many `attributes` relationship in one batch instead of
+        // faulting each MetricAttribute individually (was an N+1 query storm).
+        metricDescriptor.relationshipKeyPathsForPrefetching = [\.attributes]
         let numberDataPoints = try modelContext.fetch(metricDescriptor).map { NumberDataPointSnapshot($0) }
 
         return (availableModels, MetricsSummary(spans: filtered, logEvents: logEvents, numberDataPoints: numberDataPoints, dateRange: dateRange))
