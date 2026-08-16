@@ -32,7 +32,7 @@ struct SessionSummary {
     let sessionDuration: TimeInterval
     let totalSpanCount: Int
 
-    init(spans: [OTLPSpan]) {
+    init(spans: [TraceSpanSnapshot]) {
         var inputTokens: Int64 = 0
         var outputTokens: Int64 = 0
         var cacheReadTokens: Int64 = 0
@@ -45,9 +45,9 @@ struct SessionSummary {
 
         for span in spans {
             if span.name.hasPrefix("claude_code.llm_request") {
-                inputTokens += span.inputTokens ?? 0
-                outputTokens += span.outputTokens ?? 0
-                cacheReadTokens += span.cacheReadTokens ?? 0
+                inputTokens += span.inputTokens
+                outputTokens += span.outputTokens
+                cacheReadTokens += span.cacheReadTokens
                 llmRequestCount += 1
             } else if span.name.hasPrefix("claude_code.tool.blocked_on_user") {
                 hasDecisionData = true
@@ -57,12 +57,8 @@ struct SessionSummary {
                 case nil:      break
                 default:       unknownCount += 1
                 }
-            } else if span.name == "claude_code.tool" {
-                // tool_name is not a typed column; fall back to SpanAttribute for display.
-                if let attr = span.attributes.first(where: { $0.key == "tool_name" }),
-                   case .string(let toolName) = attr.value {
-                    toolCounts[toolName, default: 0] += 1
-                }
+            } else if span.name == "claude_code.tool", let toolName = span.toolName {
+                toolCounts[toolName, default: 0] += 1
             }
         }
 
@@ -86,11 +82,9 @@ struct SessionSummary {
 // MARK: - SessionSummaryView
 
 struct SessionSummaryView: View {
-    private let spans: [OTLPSpan]
     private let summary: SessionSummary
 
-    init(spans: [OTLPSpan]) {
-        self.spans = spans
+    init(spans: [TraceSpanSnapshot]) {
         self.summary = SessionSummary(spans: spans)
     }
 

@@ -3,8 +3,8 @@ import SwiftUI
 import Charts
 
 struct GanttChartView: View {
-    let spans: [OTLPSpan]
-    @State private var selectedSpan: OTLPSpan?
+    let spans: [TraceSpanSnapshot]
+    @State private var selectedSpan: TraceSpanSnapshot?
 
     var body: some View {
         // Precompute all span data once per render to avoid O(n²) complexity.
@@ -108,7 +108,7 @@ struct GanttChartView: View {
         return level
     }
 
-    private func barColor(for span: OTLPSpan) -> Color {
+    private func barColor(for span: TraceSpanSnapshot) -> Color {
         // Error status always overrides name-based color
         if span.status == .error { return .red.opacity(0.8) }
         return spanNameColor(span.name).opacity(0.75)
@@ -137,12 +137,13 @@ struct GanttChartView: View {
 #Preview {
     let now = Date()
     let spans = [
-        OTLPSpan(traceId: "t1", spanId: "s1", name: "root", kind: .server,
-                 startTime: now, endTime: now.addingTimeInterval(0.5), status: .ok),
-        OTLPSpan(traceId: "t1", spanId: "s2", parentSpanId: "s1", name: "child-1", kind: .internal,
-                 startTime: now.addingTimeInterval(0.05), endTime: now.addingTimeInterval(0.2)),
-        OTLPSpan(traceId: "t1", spanId: "s3", parentSpanId: "s1", name: "child-2", kind: .client,
-                 startTime: now.addingTimeInterval(0.25), endTime: now.addingTimeInterval(0.45), status: .error),
+        TraceSpanSnapshot(spanId: "s1", traceId: "t1", name: "root",
+                          startTime: now, endTime: now.addingTimeInterval(0.5), status: .ok),
+        TraceSpanSnapshot(spanId: "s2", traceId: "t1", parentSpanId: "s1", name: "child-1",
+                          startTime: now.addingTimeInterval(0.05), endTime: now.addingTimeInterval(0.2)),
+        TraceSpanSnapshot(spanId: "s3", traceId: "t1", parentSpanId: "s1", name: "child-2",
+                          startTime: now.addingTimeInterval(0.25), endTime: now.addingTimeInterval(0.45),
+                          status: .error),
     ]
     GanttChartView(spans: spans)
         .frame(width: 600, height: 300)
