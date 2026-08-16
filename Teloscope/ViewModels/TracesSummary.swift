@@ -30,6 +30,15 @@ enum TraceSelection: Hashable {
     case trace(String)
 }
 
+/// What the detail panel should show. Kept as one value so the panel can never
+/// render a selection's content before that selection's spans have loaded —
+/// which would flash an empty Gantt chart instead of the loading indicator.
+enum TraceDetailState {
+    case empty
+    case loading(TraceSelection)
+    case loaded(TraceSelection, [TraceSpanSnapshot])
+}
+
 /// Value-type view of an `OTLPSpan`, safe to hand to the main actor.
 ///
 /// Carries only the typed columns the Gantt chart and session summary need. The

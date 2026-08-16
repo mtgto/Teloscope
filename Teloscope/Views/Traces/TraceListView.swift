@@ -23,40 +23,7 @@ struct TraceListView: View {
         VSplitView {
             sessionList
                 .frame(minHeight: 150)
-            switch selection {
-            case .session:
-                if model.isLoadingSelection {
-                    ProgressView("Loading...")
-                        .frame(maxWidth: .infinity, minHeight: detailPanelMinHeight)
-                } else {
-                    ScrollView(.vertical) {
-                        VStack(spacing: 0) {
-                            SessionSummaryView(spans: model.selectedSpans)
-                                .background(.background)
-                            Divider()
-                            GanttChartView(spans: model.selectedSpans)
-                        }
-                    }
-                    .frame(minHeight: detailPanelMinHeight)
-                }
-            case .trace:
-                if model.isLoadingSelection {
-                    ProgressView("Loading...")
-                        .frame(maxWidth: .infinity, minHeight: detailPanelMinHeight)
-                } else {
-                    ScrollView(.vertical) {
-                        GanttChartView(spans: model.selectedSpans)
-                    }
-                    .frame(minHeight: detailPanelMinHeight)
-                }
-            case nil:
-                ContentUnavailableView(
-                    "Select a Trace",
-                    systemImage: "chart.bar.doc.horizontal",
-                    description: Text("Select a trace from the list above to see the Gantt chart")
-                )
-                .frame(maxWidth: .infinity, minHeight: detailPanelMinHeight)
-            }
+            detailPanel
         }
         .navigationTitle("Traces")
         .onAppear { model.reloadSessions(container: modelContext.container) }
@@ -67,6 +34,39 @@ struct TraceListView: View {
             for await _ in NotificationCenter.default.notifications(named: .otlpSpansIngested) {
                 model.reloadSessions(container: modelContext.container)
             }
+        }
+    }
+
+    // Driven entirely by the model's state rather than by `selection`, so the panel
+    // can't briefly render an empty chart for a selection that is still loading.
+    @ViewBuilder
+    private var detailPanel: some View {
+        switch model.detailState {
+        case .empty:
+            ContentUnavailableView(
+                "Select a Trace",
+                systemImage: "chart.bar.doc.horizontal",
+                description: Text("Select a trace from the list above to see the Gantt chart")
+            )
+            .frame(maxWidth: .infinity, minHeight: detailPanelMinHeight)
+        case .loading:
+            ProgressView("Loading...")
+                .frame(maxWidth: .infinity, minHeight: detailPanelMinHeight)
+        case .loaded(.session, let spans):
+            ScrollView(.vertical) {
+                VStack(spacing: 0) {
+                    SessionSummaryView(spans: spans)
+                        .background(.background)
+                    Divider()
+                    GanttChartView(spans: spans)
+                }
+            }
+            .frame(minHeight: detailPanelMinHeight)
+        case .loaded(.trace, let spans):
+            ScrollView(.vertical) {
+                GanttChartView(spans: spans)
+            }
+            .frame(minHeight: detailPanelMinHeight)
         }
     }
 
@@ -96,6 +96,21 @@ struct TraceListView: View {
             }
         }
         .listStyle(.sidebar)
+        // Only while there is nothing to show: later reloads keep the list on screen
+        // rather than replacing it with a spinner every time spans are ingested.
+        .overlay {
+            if model.sessions.isEmpty {
+                if model.isLoadingSessions {
+                    ProgressView("Loading...")
+                } else {
+                    ContentUnavailableView(
+                        "No Traces",
+                        systemImage: "chart.bar.doc.horizontal",
+                        description: Text("Traces appear here once Claude Code sends spans to the server.")
+                    )
+                }
+            }
+        }
     }
 
     @ViewBuilder
