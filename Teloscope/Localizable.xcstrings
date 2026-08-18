@@ -522,6 +522,17 @@
         }
       }
     },
+    "No Traces" : {
+      "comment" : "A title shown when the trace list is empty.",
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トレースがありません"
+          }
+        }
+      }
+    },
     "No models in range" : {
       "localizations" : {
         "ja" : {
@@ -1076,6 +1087,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "トレース"
+          }
+        }
+      }
+    },
+    "Traces appear here once Claude Code sends spans to the server." : {
+      "comment" : "A description shown when the trace list is empty.",
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Codeがサーバーにスパンを送信するとここにトレースが表示されます。"
           }
         }
       }

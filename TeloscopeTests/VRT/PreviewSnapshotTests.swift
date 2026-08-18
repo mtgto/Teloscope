@@ -327,15 +327,16 @@ import Testing
 
     @Test func ganttChartView_default() {
         let spans = [
-            OTLPSpan(traceId: "t1", spanId: "s1", name: "root", kind: .server,
-                     startTime: referenceDate, endTime: referenceDate.addingTimeInterval(0.5),
-                     status: .ok),
-            OTLPSpan(traceId: "t1", spanId: "s2", parentSpanId: "s1", name: "child-1",
-                     kind: .internal, startTime: referenceDate.addingTimeInterval(0.05),
-                     endTime: referenceDate.addingTimeInterval(0.2)),
-            OTLPSpan(traceId: "t1", spanId: "s3", parentSpanId: "s1", name: "child-2",
-                     kind: .client, startTime: referenceDate.addingTimeInterval(0.25),
-                     endTime: referenceDate.addingTimeInterval(0.45), status: .error),
+            TraceSpanSnapshot(spanId: "s1", traceId: "t1", name: "root",
+                              startTime: referenceDate, endTime: referenceDate.addingTimeInterval(0.5),
+                              kind: .server, status: .ok),
+            TraceSpanSnapshot(spanId: "s2", traceId: "t1", parentSpanId: "s1", name: "child-1",
+                              startTime: referenceDate.addingTimeInterval(0.05),
+                              endTime: referenceDate.addingTimeInterval(0.2), kind: .internal),
+            TraceSpanSnapshot(spanId: "s3", traceId: "t1", parentSpanId: "s1", name: "child-2",
+                              startTime: referenceDate.addingTimeInterval(0.25),
+                              endTime: referenceDate.addingTimeInterval(0.45), kind: .client,
+                              status: .error),
         ]
         renderSnapshot(
             GanttChartView(spans: spans)
