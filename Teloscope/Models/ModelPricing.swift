@@ -5,6 +5,11 @@ struct ModelPricing {
     let outputPerMillion: Double
     let cacheReadPerMillion: Double
 
+    /// Writing to the cache costs 1.25x the base input rate on every Claude model
+    /// (5-minute TTL, the default). The OTLP attribute does not carry the TTL, so
+    /// 1-hour-TTL writes (2x base input) are under-counted.
+    var cacheWritePerMillion: Double { inputPerMillion * 1.25 }
+
     // Ordered list — first prefix match wins. Uses standard (non-introductory) pricing.
     // More specific prefixes must come before their shorter generic fallback.
     // Source: https://docs.anthropic.com/en/docs/about-claude/pricing
@@ -30,9 +35,15 @@ struct ModelPricing {
     }
 
     /// Total cost in USD for the given token counts.
-    func cost(inputTokens: Int64, outputTokens: Int64, cacheReadTokens: Int64) -> Double {
-        Double(inputTokens)      * inputPerMillion      / 1_000_000
-            + Double(outputTokens)    * outputPerMillion     / 1_000_000
-            + Double(cacheReadTokens) * cacheReadPerMillion  / 1_000_000
+    func cost(
+        inputTokens: Int64,
+        outputTokens: Int64,
+        cacheReadTokens: Int64,
+        cacheCreationTokens: Int64
+    ) -> Double {
+        Double(inputTokens)          * inputPerMillion      / 1_000_000
+            + Double(outputTokens)       * outputPerMillion     / 1_000_000
+            + Double(cacheReadTokens)    * cacheReadPerMillion  / 1_000_000
+            + Double(cacheCreationTokens) * cacheWritePerMillion / 1_000_000
     }
 }

@@ -187,6 +187,17 @@
         }
       }
     },
+    "Cache write" : {
+      "comment" : "Label for the number of tokens written to the cache during an LLM request.",
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャッシュ書き込み"
+          }
+        }
+      }
+    },
     "Claude Skill Usage" : {
       "localizations" : {
         "ja" : {

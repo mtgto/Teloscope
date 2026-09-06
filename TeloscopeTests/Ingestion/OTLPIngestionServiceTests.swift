@@ -101,6 +101,7 @@ struct OTLPIngestionServiceTests {
             kv("input_tokens",        int:    1000),
             kv("output_tokens",       int:    500),
             kv("cache_read_tokens",   int:    200),
+            kv("cache_creation_tokens", int:  300),
         ]
 
         var scopeSpans = Opentelemetry_Proto_Trace_V1_ScopeSpans()
@@ -120,6 +121,7 @@ struct OTLPIngestionServiceTests {
         #expect(span.inputTokens == 1000)
         #expect(span.outputTokens == 500)
         #expect(span.cacheReadTokens == 200)
+        #expect(span.cacheCreationTokens == 300)
     }
 
     @Test func ingestPopulatesDecisionForToolSpan() throws {
