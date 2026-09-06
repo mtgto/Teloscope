@@ -96,12 +96,12 @@ struct OTLPIngestionServiceTests {
             kv.key = key; kv.value.intValue = value; return kv
         }
         spanProto.attributes = [
-            kv("session.id",          string: "sess-abc"),
-            kv("model",               string: "claude-opus-4"),
-            kv("input_tokens",        int:    1000),
-            kv("output_tokens",       int:    500),
-            kv("cache_read_tokens",   int:    200),
-            kv("cache_creation_tokens", int:  300),
+            kv("session.id",            string: "sess-abc"),
+            kv("model",                 string: "claude-opus-4"),
+            kv("input_tokens",          int:    1000),
+            kv("output_tokens",         int:    500),
+            kv("cache_read_tokens",     int:    200),
+            kv("cache_creation_tokens", int:    300),
         ]
 
         var scopeSpans = Opentelemetry_Proto_Trace_V1_ScopeSpans()
