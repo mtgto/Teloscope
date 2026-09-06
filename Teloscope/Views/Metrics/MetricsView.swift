@@ -106,7 +106,9 @@ struct MetricsView: View {
     }
 
     private func tokensWidget(_ m: MetricsSummary?) -> some View {
-        let total = m.map { $0.totalInputTokens + $0.totalOutputTokens + $0.totalCacheReadTokens }
+        let total = m.map {
+            $0.totalInputTokens + $0.totalOutputTokens + $0.totalCacheReadTokens + $0.totalCacheCreationTokens
+        }
         return StatWidgetView(
             title: "Total Tokens",
             primaryValue: total?.formatted(.number) ?? "000,000",
@@ -114,6 +116,7 @@ struct MetricsView: View {
                 (label: "Input",      value: m?.totalInputTokens.formatted(.number) ?? "000,000"),
                 (label: "Output",     value: m?.totalOutputTokens.formatted(.number) ?? "000,000"),
                 (label: "Cache read", value: m?.totalCacheReadTokens.formatted(.number) ?? "000,000"),
+                (label: "Cache write", value: m?.totalCacheCreationTokens.formatted(.number) ?? "000,000"),
             ]
         )
     }

@@ -101,6 +101,7 @@ struct OTLPIngestionServiceTests {
             kv("input_tokens",        int:    1000),
             kv("output_tokens",       int:    500),
             kv("cache_read_tokens",   int:    200),
+            kv("cache_creation_tokens", int:  300),
         ]
 
         var scopeSpans = Opentelemetry_Proto_Trace_V1_ScopeSpans()
@@ -120,6 +121,7 @@ struct OTLPIngestionServiceTests {
         #expect(span.inputTokens == 1000)
         #expect(span.outputTokens == 500)
         #expect(span.cacheReadTokens == 200)
+        #expect(span.cacheCreationTokens == 300)
     }
 
     @Test func ingestPopulatesDecisionForToolSpan() throws {
@@ -331,20 +333,25 @@ struct OTLPIngestionServiceTests {
         #expect(events.isEmpty)
     }
 
-    @Test func ingestLogsPostsOtlpLogsIngestedNotification() throws {
+    @Test func ingestLogsPostsOtlpLogsIngestedNotification() async throws {
         let container = try makeContainer()
         let ctx = ModelContext(container)
         let service = OTLPIngestionService(modelContext: ctx)
 
-        var notified = false
-        let token = NotificationCenter.default.addObserver(
-            forName: .otlpLogsIngested, object: nil, queue: .main
-        ) { _ in notified = true }
-        defer { NotificationCenter.default.removeObserver(token) }
+        // `queue: nil` runs the observer synchronously on the posting thread, so the
+        // confirmation is recorded before the body returns no matter which thread the
+        // test runs on. The count is a lower bound because NotificationCenter.default is
+        // process-wide: other tests in this suite ingest logs in parallel and post the
+        // same notification.
+        try await confirmation("otlpLogsIngested is posted", expectedCount: 1...) { posted in
+            let token = NotificationCenter.default.addObserver(
+                forName: .otlpLogsIngested, object: nil, queue: nil
+            ) { _ in posted() }
+            defer { NotificationCenter.default.removeObserver(token) }
 
-        let data = try makeLogRequest(eventName: "skill_activated")
-        service.ingest(.logs(data))
-        #expect(notified)
+            let data = try makeLogRequest(eventName: "skill_activated")
+            service.ingest(.logs(data))
+        }
     }
 
     @Test func deletesSpansOlderThanRetentionDays() throws {

@@ -178,11 +178,13 @@ struct MetricsRepositoryTests {
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1",
             name: "claude_code.llm_request",
             startTime: now, endTime: now.addingTimeInterval(1),
-            model: "claude-opus-4", inputTokens: 300, outputTokens: 100, cacheReadTokens: 50))
+            model: "claude-opus-4", inputTokens: 300, outputTokens: 100, cacheReadTokens: 50,
+            cacheCreationTokens: 25))
         ctx.insert(OTLPSpan(traceId: "t2", spanId: "s2",
             name: "claude_code.llm_request",
             startTime: now, endTime: now.addingTimeInterval(1),
-            model: "claude-sonnet-4", inputTokens: 700, outputTokens: 200, cacheReadTokens: 150))
+            model: "claude-sonnet-4", inputTokens: 700, outputTokens: 200, cacheReadTokens: 150,
+            cacheCreationTokens: 75))
         try ctx.save()
 
         let repo = MetricsRepository(modelContainer: container)
@@ -191,6 +193,7 @@ struct MetricsRepositoryTests {
         #expect(summary.totalInputTokens == 1000)
         #expect(summary.totalOutputTokens == 300)
         #expect(summary.totalCacheReadTokens == 200)
+        #expect(summary.totalCacheCreationTokens == 100)
     }
 
     // MARK: - Metric data points

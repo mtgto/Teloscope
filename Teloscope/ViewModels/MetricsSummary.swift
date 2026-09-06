@@ -11,6 +11,7 @@ struct SpanSnapshot: Sendable {
     let inputTokens: Int64
     let outputTokens: Int64
     let cacheReadTokens: Int64
+    let cacheCreationTokens: Int64
     let decision: String?
     let toolName: String?
 
@@ -22,6 +23,7 @@ struct SpanSnapshot: Sendable {
         inputTokens = span.inputTokens ?? 0
         outputTokens = span.outputTokens ?? 0
         cacheReadTokens = span.cacheReadTokens ?? 0
+        cacheCreationTokens = span.cacheCreationTokens ?? 0
         decision = span.decision
         toolName = span.toolName
     }
@@ -88,6 +90,7 @@ struct MetricsSummary {
     let totalInputTokens: Int64
     let totalOutputTokens: Int64
     let totalCacheReadTokens: Int64
+    let totalCacheCreationTokens: Int64
     let sessionCount: Int
     let approvalCount: Int
     let rejectionCount: Int
@@ -116,6 +119,7 @@ struct MetricsSummary {
         var inputTokens: Int64 = 0
         var outputTokens: Int64 = 0
         var cacheReadTokens: Int64 = 0
+        var cacheCreationTokens: Int64 = 0
         var sessionIds: Set<String> = []
         var approved = 0
         var rejected = 0
@@ -132,6 +136,7 @@ struct MetricsSummary {
                 inputTokens     += span.inputTokens
                 outputTokens    += span.outputTokens
                 cacheReadTokens += span.cacheReadTokens
+                cacheCreationTokens += span.cacheCreationTokens
                 let wd = Calendar.current.component(.weekday, from: span.startTime)
                 let hr = Calendar.current.component(.hour,    from: span.startTime)
                 heatCounts[wd, default: [:]][hr, default: 0] += 1
@@ -141,7 +146,8 @@ struct MetricsSummary {
                         costUSD += p.cost(
                             inputTokens: span.inputTokens,
                             outputTokens: span.outputTokens,
-                            cacheReadTokens: span.cacheReadTokens
+                            cacheReadTokens: span.cacheReadTokens,
+                            cacheCreationTokens: span.cacheCreationTokens
                         )
                     }
                 }
@@ -164,6 +170,7 @@ struct MetricsSummary {
         self.totalInputTokens     = inputTokens
         self.totalOutputTokens    = outputTokens
         self.totalCacheReadTokens = cacheReadTokens
+        self.totalCacheCreationTokens = cacheCreationTokens
         self.sessionCount         = sessionIds.count
         self.approvalCount        = approved
         self.rejectionCount       = rejected
@@ -202,7 +209,8 @@ struct MetricsSummary {
                 costBuckets[bucketStart, default: 0] += p.cost(
                     inputTokens: span.inputTokens,
                     outputTokens: span.outputTokens,
-                    cacheReadTokens: span.cacheReadTokens
+                    cacheReadTokens: span.cacheReadTokens,
+                    cacheCreationTokens: span.cacheCreationTokens
                 )
             }
         }

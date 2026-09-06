@@ -57,6 +57,7 @@ struct TraceSpanSnapshot: Identifiable, Hashable, Sendable {
     let inputTokens: Int64
     let outputTokens: Int64
     let cacheReadTokens: Int64
+    let cacheCreationTokens: Int64
     let decision: String?
     let toolName: String?
     /// Identifies the backing span so the detail popover can fetch its attributes.
@@ -77,6 +78,7 @@ struct TraceSpanSnapshot: Identifiable, Hashable, Sendable {
         inputTokens: Int64 = 0,
         outputTokens: Int64 = 0,
         cacheReadTokens: Int64 = 0,
+        cacheCreationTokens: Int64 = 0,
         decision: String? = nil,
         toolName: String? = nil,
         persistentID: PersistentIdentifier? = nil
@@ -92,6 +94,7 @@ struct TraceSpanSnapshot: Identifiable, Hashable, Sendable {
         self.inputTokens = inputTokens
         self.outputTokens = outputTokens
         self.cacheReadTokens = cacheReadTokens
+        self.cacheCreationTokens = cacheCreationTokens
         self.decision = decision
         self.toolName = toolName
         self.persistentID = persistentID
@@ -110,6 +113,7 @@ struct TraceSpanSnapshot: Identifiable, Hashable, Sendable {
             inputTokens: span.inputTokens ?? 0,
             outputTokens: span.outputTokens ?? 0,
             cacheReadTokens: span.cacheReadTokens ?? 0,
+            cacheCreationTokens: span.cacheCreationTokens ?? 0,
             decision: span.decision,
             toolName: span.toolName,
             persistentID: span.persistentModelID

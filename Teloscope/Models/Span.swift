@@ -65,6 +65,7 @@ final class OTLPSpan {
     var inputTokens: Int64?
     var outputTokens: Int64?
     var cacheReadTokens: Int64?
+    var cacheCreationTokens: Int64?
     var decision: String?
     var toolName: String?
 
@@ -86,6 +87,7 @@ final class OTLPSpan {
         inputTokens: Int64? = nil,
         outputTokens: Int64? = nil,
         cacheReadTokens: Int64? = nil,
+        cacheCreationTokens: Int64? = nil,
         decision: String? = nil,
         toolName: String? = nil
     ) {
@@ -103,6 +105,7 @@ final class OTLPSpan {
         self.inputTokens = inputTokens
         self.outputTokens = outputTokens
         self.cacheReadTokens = cacheReadTokens
+        self.cacheCreationTokens = cacheCreationTokens
         self.decision = decision
         self.toolName = toolName
     }

@@ -23,6 +23,7 @@ struct SessionSummary {
     let inputTokens: Int64
     let outputTokens: Int64
     let cacheReadTokens: Int64
+    let cacheCreationTokens: Int64
     let llmRequestCount: Int
     let topTools: [(name: String, count: Int)]
     let approvedCount: Int
@@ -36,6 +37,7 @@ struct SessionSummary {
         var inputTokens: Int64 = 0
         var outputTokens: Int64 = 0
         var cacheReadTokens: Int64 = 0
+        var cacheCreationTokens: Int64 = 0
         var llmRequestCount = 0
         var toolCounts: [String: Int] = [:]
         var approvedCount = 0
@@ -48,6 +50,7 @@ struct SessionSummary {
                 inputTokens += span.inputTokens
                 outputTokens += span.outputTokens
                 cacheReadTokens += span.cacheReadTokens
+                cacheCreationTokens += span.cacheCreationTokens
                 llmRequestCount += 1
             } else if span.name.hasPrefix("claude_code.tool.blocked_on_user") {
                 hasDecisionData = true
@@ -65,6 +68,7 @@ struct SessionSummary {
         self.inputTokens = inputTokens
         self.outputTokens = outputTokens
         self.cacheReadTokens = cacheReadTokens
+        self.cacheCreationTokens = cacheCreationTokens
         self.llmRequestCount = llmRequestCount
         self.topTools = toolCounts.sorted { $0.value > $1.value }.prefix(5).map { (name: $0.key, count: $0.value) }
         self.approvedCount = approvedCount
@@ -106,6 +110,7 @@ struct SessionSummaryView: View {
                 LabeledValue(label: "Input", value: summary.inputTokens.formatted(.number))
                 LabeledValue(label: "Output", value: summary.outputTokens.formatted(.number))
                 LabeledValue(label: "Cache read", value: summary.cacheReadTokens.formatted(.number))
+                LabeledValue(label: "Cache write", value: summary.cacheCreationTokens.formatted(.number))
                 LabeledValue(label: "Requests", value: "\(summary.llmRequestCount)")
             }
         }
