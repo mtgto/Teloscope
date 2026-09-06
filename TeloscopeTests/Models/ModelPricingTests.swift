@@ -4,9 +4,15 @@ import Testing
 
 struct ModelPricingTests {
     @Test func knownModelOpusCost() throws {
-        let p = try #require(ModelPricing.pricing(for: "claude-opus-4"))
+        let p = try #require(ModelPricing.pricing(for: "claude-opus-4-5"))
         // 1M input tokens at $5/M
         #expect(abs(p.cost(inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0) - 5.0) < 0.001)
+    }
+
+    @Test func legacyOpus4KeepsOldPricing() throws {
+        // Claude Opus 4 / 4.1 predate the Opus 4.5 price drop
+        let p = try #require(ModelPricing.pricing(for: "claude-opus-4-1-20250805"))
+        #expect(abs(p.cost(inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0) - 15.0) < 0.001)
     }
 
     @Test func prefixMatchingSonnet() throws {
@@ -20,7 +26,7 @@ struct ModelPricingTests {
     }
 
     @Test func costSumsAllTokenTypes() throws {
-        let p = try #require(ModelPricing.pricing(for: "claude-opus-4"))
+        let p = try #require(ModelPricing.pricing(for: "claude-opus-4-5"))
         // 0 input, 1M output at $25, 1M cache read at $0.5 → $25.5
         #expect(abs(p.cost(inputTokens: 0, outputTokens: 1_000_000, cacheReadTokens: 1_000_000) - 25.5) < 0.001)
     }
@@ -35,6 +41,18 @@ struct ModelPricingTests {
         let p = try #require(ModelPricing.pricing(for: "claude-sonnet-5"))
         // 1M input at $3/M
         #expect(abs(p.cost(inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0) - 3.0) < 0.001)
+    }
+
+    @Test func opus5Pricing() throws {
+        let p = try #require(ModelPricing.pricing(for: "claude-opus-5"))
+        // 1M input at $5, 1M output at $25, 1M cache read at $0.5 -> $30.5
+        #expect(abs(p.cost(inputTokens: 1_000_000, outputTokens: 1_000_000, cacheReadTokens: 1_000_000) - 30.5) < 0.001)
+    }
+
+    @Test func mythos5Pricing() throws {
+        let p = try #require(ModelPricing.pricing(for: "claude-mythos-5"))
+        // 1M input at $10/M
+        #expect(abs(p.cost(inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0) - 10.0) < 0.001)
     }
 
     @Test func haiku45Pricing() throws {
