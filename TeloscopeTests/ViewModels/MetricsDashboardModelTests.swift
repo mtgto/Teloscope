@@ -109,7 +109,7 @@ struct MetricsDashboardModelTests {
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1",
             name: "claude_code.llm_request",
             startTime: now, endTime: now.addingTimeInterval(1),
-            model: "claude-opus-4", inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0))
+            model: "claude-opus-4-5", inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0))
         try ctx.save()
         let s = makeSummary(spans: try ctx.fetch(FetchDescriptor<OTLPSpan>()))
         #expect(abs(s.totalCostUSD - 5.0) < 0.001)
