@@ -1,6 +1,6 @@
 # Teloscope
 
-A macOS 14+ app that acts as an OpenTelemetry collector. It receives OTLP/HTTP signals from Claude Code, stores them in SwiftData, and visualizes Traces as a Gantt chart.
+A macOS 15+ app that acts as an OpenTelemetry collector. It receives OTLP/HTTP signals from Claude Code, stores them in SwiftData, and visualizes Traces as a Gantt chart.
 
 > **Name:** Telos (purpose/end) + scope (observation) — a pun on "telescope"
 
@@ -16,7 +16,7 @@ A macOS 14+ app that acts as an OpenTelemetry collector. It receives OTLP/HTTP s
 
 ## Requirements
 
-- macOS 14+
+- macOS 15+
 
 ## Getting Started
 
