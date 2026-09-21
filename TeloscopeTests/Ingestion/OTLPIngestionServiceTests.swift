@@ -305,6 +305,76 @@ struct OTLPIngestionServiceTests {
         #expect(spans[0].name == "recent-span")
     }
 
+    @Test func deletesResourceSpansOlderThanRetentionDays() async throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let service = OTLPIngestionService(modelContainer: container)
+
+        func resourceSpans(receivedAt: Date, spanId: String) -> ResourceSpans {
+            ResourceSpans(
+                receivedAt: receivedAt,
+                rawData: Data([0x01, 0x02]),
+                scopeSpans: [ScopeSpans(spans: [OTLPSpan(
+                    traceId: "t-\(spanId)", spanId: spanId, name: "claude_code.tool",
+                    startTime: receivedAt, endTime: receivedAt,
+                    attributes: [SpanAttribute(key: "tool_name", value: .string("Bash"))]
+                )])]
+            )
+        }
+        context.insert(resourceSpans(receivedAt: Date(timeIntervalSinceNow: -10 * 86400), spanId: "old"))
+        context.insert(resourceSpans(receivedAt: Date(timeIntervalSinceNow: -1 * 86400), spanId: "new"))
+        try context.save()
+
+        await service.deleteOldData(retentionDays: 7)
+
+        let remaining = try context.fetch(FetchDescriptor<ResourceSpans>())
+        #expect(remaining.count == 1)
+        // The whole subtree of the deleted payload must go with it, not be orphaned.
+        #expect(try context.fetch(FetchDescriptor<ScopeSpans>()).count == 1)
+        #expect(try context.fetch(FetchDescriptor<OTLPSpan>()).count == 1)
+        #expect(try context.fetch(FetchDescriptor<SpanAttribute>()).count == 1)
+    }
+
+    @Test func deletesResourceLogsOlderThanRetentionDays() async throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let service = OTLPIngestionService(modelContainer: container)
+
+        context.insert(ResourceLogs(receivedAt: Date(timeIntervalSinceNow: -10 * 86400), rawData: Data([0x01])))
+        context.insert(ResourceLogs(receivedAt: Date(timeIntervalSinceNow: -1 * 86400), rawData: Data([0x02])))
+        try context.save()
+
+        await service.deleteOldData(retentionDays: 7)
+
+        let remaining = try context.fetch(FetchDescriptor<ResourceLogs>())
+        #expect(remaining.count == 1)
+        #expect(remaining[0].rawData == Data([0x02]))
+    }
+
+    @Test func deletesLogEventsOlderThanRetentionDays() async throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let service = OTLPIngestionService(modelContainer: container)
+
+        context.insert(LogEvent(
+            eventName: "skill_activated",
+            timestamp: Date(timeIntervalSinceNow: -10 * 86400),
+            skillName: "old-skill"
+        ))
+        context.insert(LogEvent(
+            eventName: "skill_activated",
+            timestamp: Date(timeIntervalSinceNow: -1 * 86400),
+            skillName: "new-skill"
+        ))
+        try context.save()
+
+        await service.deleteOldData(retentionDays: 7)
+
+        let remaining = try context.fetch(FetchDescriptor<LogEvent>())
+        #expect(remaining.count == 1)
+        #expect(remaining[0].skillName == "new-skill")
+    }
+
     @Test func ingestsMetricDataPointsFromSumMetric() async throws {
         let container = try makeContainer()
         let context = ModelContext(container)
