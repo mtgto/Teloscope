@@ -20,6 +20,8 @@ final class ResourceAttribute {
 
 @Model
 final class ResourceSpans {
+    #Index<ResourceSpans>([\.receivedAt])
+
     var receivedAt: Date
     var rawData: Data?
     @Relationship(deleteRule: .cascade)

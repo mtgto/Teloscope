@@ -168,6 +168,17 @@ actor OTLPIngestionService {
         try? modelContext.delete(model: OTLPSpan.self, where: predicate)
         let metricPredicate = #Predicate<MetricDataPoint> { $0.timestamp < cutoff }
         try? modelContext.delete(model: MetricDataPoint.self, where: metricPredicate)
+
+        // The raw OTLP payloads are kept for forward compatibility but still expire:
+        // without this they accumulate forever, and deleting spans by startTime alone
+        // left their ScopeSpans and ResourceSpans behind as orphans.
+        let resourceSpansPredicate = #Predicate<ResourceSpans> { $0.receivedAt < cutoff }
+        try? modelContext.delete(model: ResourceSpans.self, where: resourceSpansPredicate)
+        let resourceLogsPredicate = #Predicate<ResourceLogs> { $0.receivedAt < cutoff }
+        try? modelContext.delete(model: ResourceLogs.self, where: resourceLogsPredicate)
+        let logEventPredicate = #Predicate<LogEvent> { $0.timestamp < cutoff }
+        try? modelContext.delete(model: LogEvent.self, where: logEventPredicate)
+
         try? modelContext.save()
         NotificationCenter.default.post(name: .otlpSpansIngested, object: nil)
     }

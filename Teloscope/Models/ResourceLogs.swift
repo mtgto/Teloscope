@@ -5,6 +5,8 @@ import SwiftData
 /// Logs are stored as raw data only in the current phase. Visualization is planned for a future phase.
 @Model
 final class ResourceLogs {
+    #Index<ResourceLogs>([\.receivedAt])
+
     var receivedAt: Date
     var rawData: Data
 
