@@ -51,16 +51,13 @@ struct NumberDataPointSnapshot: Sendable {
     let metricName: String
     let timestamp: Date
     let value: Double
-    let attributes: [String: String]
+    let type: String?
 
     init(_ point: MetricDataPoint) {
         metricName = point.metricName
         timestamp = point.timestamp
         value = point.value
-        attributes = Dictionary(
-            point.attributes.map { ($0.key, $0.value) },
-            uniquingKeysWith: { first, _ in first }
-        )
+        type = point.type
     }
 }
 
@@ -86,6 +83,9 @@ enum TimeGranularity {
 }
 
 struct MetricsSummary {
+    /// The only metric the summary reads; MetricsRepository fetches nothing else.
+    static let linesOfCodeMetricName = "claude_code.lines_of_code.count"
+
     let totalCostUSD: Double
     let totalInputTokens: Int64
     let totalOutputTokens: Int64
@@ -257,8 +257,8 @@ struct MetricsSummary {
 
         var linesAdded: Int64 = 0
         var linesRemoved: Int64 = 0
-        for dp in numberDataPoints where dp.metricName == "claude_code.lines_of_code.count" {
-            switch dp.attributes["type"] {
+        for dp in numberDataPoints where dp.metricName == Self.linesOfCodeMetricName {
+            switch dp.type {
             case "added":   linesAdded   += Int64(dp.value)
             case "removed": linesRemoved += Int64(dp.value)
             default: break

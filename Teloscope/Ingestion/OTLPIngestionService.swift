@@ -3,13 +3,8 @@ import Foundation
 import SwiftData
 import SwiftProtobuf
 
-final class OTLPIngestionService {
-    private let modelContext: ModelContext
-
-    init(modelContext: ModelContext) {
-        self.modelContext = modelContext
-    }
-
+@ModelActor
+actor OTLPIngestionService {
     func ingest(_ request: OTLPRequest) {
         switch request {
         case .traces(let data): ingestTraces(data)
@@ -97,6 +92,7 @@ final class OTLPIngestionService {
                             metricUnit: metric.unit,
                             timestamp: Date(unixNano: dp.timeUnixNano),
                             value: value,
+                            type: attrs.first { $0.key == "type" }?.value,
                             attributes: attrs
                         ))
                     }
@@ -151,20 +147,19 @@ final class OTLPIngestionService {
         NotificationCenter.default.post(name: .otlpLogsIngested, object: nil)
     }
 
-    func backfillTypedColumns() {
-        let descriptor = FetchDescriptor<OTLPSpan>(
-            predicate: #Predicate { $0.toolName == nil }
+    /// Fills the `type` column on data points written before it existed, so that
+    /// historical lines-of-code totals survive the move off the attributes relationship.
+    /// Only lines-of-code points are touched — they are the only ones the summary reads.
+    func backfillMetricTypes() {
+        let metricName = MetricsSummary.linesOfCodeMetricName
+        let descriptor = FetchDescriptor<MetricDataPoint>(
+            predicate: #Predicate { $0.type == nil && $0.metricName == metricName }
         )
-        guard let spans = try? modelContext.fetch(descriptor) else { return }
-        var changed = false
-        for span in spans where span.name == "claude_code.tool" {
-            if let attr = span.attributes.first(where: { $0.key == "tool_name" }),
-               let toolName = attr.value?.stringValue {
-                span.toolName = toolName
-                changed = true
-            }
+        guard let points = try? modelContext.fetch(descriptor), !points.isEmpty else { return }
+        for point in points {
+            point.type = point.attributes.first { $0.key == "type" }?.value
         }
-        if changed { try? modelContext.save() }
+        try? modelContext.save()
     }
 
     func deleteOldData(retentionDays: Int) {

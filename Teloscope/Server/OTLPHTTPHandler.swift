@@ -7,11 +7,11 @@ final class OTLPHTTPHandler: ChannelInboundHandler, @unchecked Sendable {
     typealias InboundIn = HTTPServerRequestPart
     typealias OutboundOut = HTTPServerResponsePart
 
-    private let onRequest: (OTLPRequest) -> Void
+    private let onRequest: @Sendable (OTLPRequest) -> Void
     private var requestHead: HTTPRequestHead?
     private var bodyBuffer: ByteBuffer?
 
-    init(onRequest: @escaping (OTLPRequest) -> Void) {
+    init(onRequest: @escaping @Sendable (OTLPRequest) -> Void) {
         self.onRequest = onRequest
     }
 

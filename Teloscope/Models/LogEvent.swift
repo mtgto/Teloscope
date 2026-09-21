@@ -4,6 +4,8 @@ import SwiftData
 
 @Model
 final class LogEvent {
+    #Index<LogEvent>([\.timestamp])
+
     var eventName: String
     var timestamp: Date
     var sessionId: String?

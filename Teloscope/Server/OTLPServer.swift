@@ -13,7 +13,7 @@ final class OTLPServer: @unchecked Sendable {
     private var group: MultiThreadedEventLoopGroup?
     private var channel: Channel?
 
-    func start(port: Int, onRequest: @escaping (OTLPRequest) -> Void) async throws {
+    func start(port: Int, onRequest: @escaping @Sendable (OTLPRequest) -> Void) async throws {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 2)
         self.group = group
 

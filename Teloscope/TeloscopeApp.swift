@@ -33,6 +33,7 @@ struct TeloscopeApp: App {
             : .standard
     )
     @State private var server = OTLPServer()
+    @State private var maintenance = BackgroundMaintenance()
 
     var body: some Scene {
         Window("Teloscope", id: "main") {
@@ -40,8 +41,10 @@ struct TeloscopeApp: App {
                 .environment(settings)
                 .environment(server)
                 .task {
-                    runStartupMigration()
-                    startRetentionTimer()
+                    maintenance.startIfNeeded(
+                        container: sharedModelContainer,
+                        retentionDays: settings.retentionDays
+                    )
                     if settings.autoStart {
                         await startServer()
                     }
@@ -59,38 +62,18 @@ struct TeloscopeApp: App {
         }
     }
 
-    private func runStartupMigration() {
-        let context = ModelContext(sharedModelContainer)
-        let service = OTLPIngestionService(modelContext: context)
-        service.backfillTypedColumns()
-    }
-
     private func startServer() async {
         guard !server.isRunning else { return }
         await MainActor.run { server.lastError = nil }
-        let context = ModelContext(sharedModelContainer)
-        let ingestion = OTLPIngestionService(modelContext: context)
+        let ingestion = OTLPIngestionService(modelContainer: sharedModelContainer)
         do {
             try await server.start(port: settings.port) { request in
-                Task { @MainActor in
-                    ingestion.ingest(request)
-                }
+                Task { await ingestion.ingest(request) }
             }
         } catch {
             await MainActor.run {
                 server.lastError = error.localizedDescription
             }
-        }
-    }
-
-    private func startRetentionTimer() {
-        let context = ModelContext(sharedModelContainer)
-        let service = OTLPIngestionService(modelContext: context)
-        service.deleteOldData(retentionDays: settings.retentionDays)
-        Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { _ in
-            let ctx = ModelContext(self.sharedModelContainer)
-            let svc = OTLPIngestionService(modelContext: ctx)
-            svc.deleteOldData(retentionDays: self.settings.retentionDays)
         }
     }
 }
