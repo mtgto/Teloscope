@@ -33,6 +33,7 @@ struct TeloscopeApp: App {
             : .standard
     )
     @State private var server = OTLPServer()
+    @State private var maintenance = BackgroundMaintenance()
 
     var body: some Scene {
         Window("Teloscope", id: "main") {
@@ -40,7 +41,10 @@ struct TeloscopeApp: App {
                 .environment(settings)
                 .environment(server)
                 .task {
-                    startBackgroundMaintenance()
+                    maintenance.startIfNeeded(
+                        container: sharedModelContainer,
+                        retentionDays: settings.retentionDays
+                    )
                     if settings.autoStart {
                         await startServer()
                     }
@@ -70,20 +74,6 @@ struct TeloscopeApp: App {
             await MainActor.run {
                 server.lastError = error.localizedDescription
             }
-        }
-    }
-
-    /// Runs the one-off schema backfill and starts the retention sweep. Both go through
-    /// the ingestion actor so neither touches the main thread.
-    private func startBackgroundMaintenance() {
-        let service = OTLPIngestionService(modelContainer: sharedModelContainer)
-        let retentionDays = settings.retentionDays
-        Task {
-            await service.backfillMetricTypes()
-            await service.deleteOldData(retentionDays: retentionDays)
-        }
-        Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { _ in
-            Task { await service.deleteOldData(retentionDays: retentionDays) }
         }
     }
 }
