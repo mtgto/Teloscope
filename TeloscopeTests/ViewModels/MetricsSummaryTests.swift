@@ -214,13 +214,12 @@ struct MetricsSummaryTests {
     // MARK: - linesOfCode
 
     private func ndp(_ type: String, value: Double) -> NumberDataPointSnapshot {
-        let attr = MetricAttribute(key: "type", value: type)
-        return NumberDataPointSnapshot(MetricDataPoint(
+        NumberDataPointSnapshot(MetricDataPoint(
             metricName: "claude_code.lines_of_code.count",
             metricUnit: "{lines}",
             timestamp: Date(),
             value: value,
-            attributes: [attr]
+            type: type
         ))
     }
 
@@ -241,7 +240,7 @@ struct MetricsSummaryTests {
         let other = NumberDataPointSnapshot(MetricDataPoint(
             metricName: "other.metric", metricUnit: "",
             timestamp: Date(), value: 999,
-            attributes: [MetricAttribute(key: "type", value: "added")]
+            type: "added"
         ))
         let summary = MetricsSummary(spans: [], numberDataPoints: [other], dateRange: fullRange)
         #expect(summary.linesOfCodeAdded == 0)

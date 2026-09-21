@@ -3,6 +3,16 @@ import Testing
 import Foundation
 @testable import Teloscope
 
+/// Collects callbacks from the server's NIO event loop; the test thread reads them
+/// afterwards, so the buffer must not be a plain captured var.
+private actor RequestCollector {
+    private(set) var requests: [OTLPRequest] = []
+
+    func append(_ request: OTLPRequest) {
+        requests.append(request)
+    }
+}
+
 struct OTLPServerTests {
     @Test func serverStartsAndStops() async throws {
         let server = OTLPServer()
@@ -17,9 +27,9 @@ struct OTLPServerTests {
 
     @Test func serverReceivesTracesRequest() async throws {
         let server = OTLPServer()
-        var receivedRequests: [OTLPRequest] = []
+        let collector = RequestCollector()
         try await server.start(port: 0) { request in
-            receivedRequests.append(request)
+            Task { await collector.append(request) }
         }
         let port = try #require(server.boundPort)
 
@@ -30,8 +40,9 @@ struct OTLPServerTests {
         _ = try await URLSession.shared.data(for: req)
 
         try await Task.sleep(nanoseconds: 100_000_000)
+        let receivedRequests = await collector.requests
         #expect(receivedRequests.count == 1)
-        if case .traces(let data) = receivedRequests[0] {
+        if case .traces(let data) = receivedRequests.first {
             #expect(data == Data([0x01, 0x02]))
         } else {
             Issue.record("Expected .traces request")

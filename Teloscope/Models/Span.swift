@@ -47,6 +47,10 @@ final class SpanAttribute {
 
 @Model
 final class OTLPSpan {
+    // startTime backs the metrics date-range predicate and retention deletes;
+    // traceId and parentSpanId back the traces list and per-trace span loads.
+    #Index<OTLPSpan>([\.startTime], [\.traceId], [\.parentSpanId])
+
     var traceId: String
     var spanId: String
     var parentSpanId: String?

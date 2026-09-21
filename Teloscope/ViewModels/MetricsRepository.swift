@@ -39,12 +39,15 @@ actor MetricsRepository {
         )
         let logEvents = try modelContext.fetch(logDescriptor).map { LogEventSnapshot($0) }
 
-        var metricDescriptor = FetchDescriptor<MetricDataPoint>(
-            predicate: #Predicate { $0.timestamp >= start && $0.timestamp <= end }
+        // Only lines-of-code points feed the summary, and everything it needs lives in
+        // typed columns — so neither the other metrics nor the `attributes` relationship
+        // are fetched. Materializing them dominated this method's cost.
+        let linesOfCodeMetric = MetricsSummary.linesOfCodeMetricName
+        let metricDescriptor = FetchDescriptor<MetricDataPoint>(
+            predicate: #Predicate {
+                $0.timestamp >= start && $0.timestamp <= end && $0.metricName == linesOfCodeMetric
+            }
         )
-        // Prefetch the to-many `attributes` relationship in one batch instead of
-        // faulting each MetricAttribute individually (was an N+1 query storm).
-        metricDescriptor.relationshipKeyPathsForPrefetching = [\.attributes]
         let numberDataPoints = try modelContext.fetch(metricDescriptor).map { NumberDataPointSnapshot($0) }
 
         return (availableModels, MetricsSummary(spans: filtered, logEvents: logEvents, numberDataPoints: numberDataPoints, dateRange: dateRange))

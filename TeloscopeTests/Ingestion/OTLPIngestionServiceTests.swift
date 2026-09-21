@@ -16,7 +16,7 @@ struct OTLPIngestionServiceTests {
         )
     }
 
-    @Test func logEventCanBeInserted() throws {
+    @Test func logEventCanBeInserted() async throws {
         let container = try makeContainer()
         let ctx = ModelContext(container)
         let event = LogEvent(
@@ -34,10 +34,10 @@ struct OTLPIngestionServiceTests {
         #expect(fetched[0].skillName == "superpowers:brainstorming")
     }
 
-    @Test func ingestsSpanFromTracesRequest() throws {
+    @Test func ingestsSpanFromTracesRequest() async throws {
         let container = try makeContainer()
         let context = ModelContext(container)
-        let service = OTLPIngestionService(modelContext: context)
+        let service = OTLPIngestionService(modelContainer: container)
 
         var spanProto = Opentelemetry_Proto_Trace_V1_Span()
         spanProto.traceID = Data(repeating: 0xAB, count: 16)
@@ -64,7 +64,7 @@ struct OTLPIngestionServiceTests {
         request.resourceSpans = [resourceSpansProto]
         let data = try request.serializedData()
 
-        service.ingest(.traces(data))
+        await service.ingest(.traces(data))
 
         let spans = try context.fetch(FetchDescriptor<OTLPSpan>())
         #expect(spans.count == 1)
@@ -75,10 +75,10 @@ struct OTLPIngestionServiceTests {
         #expect(spans[0].attributes.first?.value == .string("GET"))
     }
 
-    @Test func ingestPopulatesTypedColumnsForClaudeCodeSpan() throws {
+    @Test func ingestPopulatesTypedColumnsForClaudeCodeSpan() async throws {
         let container = try makeContainer()
         let context = ModelContext(container)
-        let service = OTLPIngestionService(modelContext: context)
+        let service = OTLPIngestionService(modelContainer: container)
 
         var spanProto = Opentelemetry_Proto_Trace_V1_Span()
         spanProto.traceID = Data(repeating: 0x01, count: 16)
@@ -111,7 +111,7 @@ struct OTLPIngestionServiceTests {
         var request = Opentelemetry_Proto_Collector_Trace_V1_ExportTraceServiceRequest()
         request.resourceSpans = [resourceSpans]
 
-        service.ingest(.traces(try request.serializedData()))
+        await service.ingest(.traces(try request.serializedData()))
 
         let spans = try context.fetch(FetchDescriptor<OTLPSpan>())
         #expect(spans.count == 1)
@@ -124,10 +124,10 @@ struct OTLPIngestionServiceTests {
         #expect(span.cacheCreationTokens == 300)
     }
 
-    @Test func ingestPopulatesDecisionForToolSpan() throws {
+    @Test func ingestPopulatesDecisionForToolSpan() async throws {
         let container = try makeContainer()
         let context = ModelContext(container)
-        let service = OTLPIngestionService(modelContext: context)
+        let service = OTLPIngestionService(modelContainer: container)
 
         var spanProto = Opentelemetry_Proto_Trace_V1_Span()
         spanProto.traceID = Data(repeating: 0x01, count: 16)
@@ -148,87 +148,11 @@ struct OTLPIngestionServiceTests {
         var request = Opentelemetry_Proto_Collector_Trace_V1_ExportTraceServiceRequest()
         request.resourceSpans = [resourceSpans]
 
-        service.ingest(.traces(try request.serializedData()))
+        await service.ingest(.traces(try request.serializedData()))
 
         let spans = try context.fetch(FetchDescriptor<OTLPSpan>())
         #expect(spans[0].decision == "accept")
     }
-
-    // MARK: - backfillTypedColumns
-
-    @Test func backfillSetsToolNameFromAttribute() throws {
-        let container = try makeContainer()
-        let context = ModelContext(container)
-        let span = OTLPSpan(
-            traceId: "t", spanId: "s-bf1",
-            name: "claude_code.tool",
-            startTime: .now, endTime: .now
-        )
-        span.attributes = [SpanAttribute(key: "tool_name", value: .string("Bash"))]
-        context.insert(span)
-        try context.save()
-
-        OTLPIngestionService(modelContext: context).backfillTypedColumns()
-
-        let fetched = try context.fetch(FetchDescriptor<OTLPSpan>())
-        #expect(fetched.first?.toolName == "Bash")
-    }
-
-    @Test func backfillIgnoresSpansWithToolNameAlreadySet() throws {
-        let container = try makeContainer()
-        let context = ModelContext(container)
-        let span = OTLPSpan(
-            traceId: "t", spanId: "s-bf2",
-            name: "claude_code.tool",
-            startTime: .now, endTime: .now,
-            toolName: "Read"
-        )
-        span.attributes = [SpanAttribute(key: "tool_name", value: .string("Bash"))]
-        context.insert(span)
-        try context.save()
-
-        OTLPIngestionService(modelContext: context).backfillTypedColumns()
-
-        let fetched = try context.fetch(FetchDescriptor<OTLPSpan>())
-        #expect(fetched.first?.toolName == "Read")
-    }
-
-    @Test func backfillIgnoresNonToolSpans() throws {
-        let container = try makeContainer()
-        let context = ModelContext(container)
-        let span = OTLPSpan(
-            traceId: "t", spanId: "s-bf3",
-            name: "claude_code.llm_request",
-            startTime: .now, endTime: .now
-        )
-        span.attributes = [SpanAttribute(key: "tool_name", value: .string("Bash"))]
-        context.insert(span)
-        try context.save()
-
-        OTLPIngestionService(modelContext: context).backfillTypedColumns()
-
-        let fetched = try context.fetch(FetchDescriptor<OTLPSpan>())
-        #expect(fetched.first?.toolName == nil)
-    }
-
-    @Test func backfillSkipsToolSpanWithNoAttribute() throws {
-        let container = try makeContainer()
-        let context = ModelContext(container)
-        let span = OTLPSpan(
-            traceId: "t", spanId: "s-bf4",
-            name: "claude_code.tool",
-            startTime: .now, endTime: .now
-        )
-        context.insert(span)
-        try context.save()
-
-        OTLPIngestionService(modelContext: context).backfillTypedColumns()
-
-        let fetched = try context.fetch(FetchDescriptor<OTLPSpan>())
-        #expect(fetched.first?.toolName == nil)
-    }
-
-    // MARK: - Log ingestion helpers
 
     private func makeLogRequest(
         eventName: String,
@@ -264,10 +188,10 @@ struct OTLPIngestionServiceTests {
         return try request.serializedData()
     }
 
-    @Test func ingestsSkillActivatedLogEvent() throws {
+    @Test func ingestsSkillActivatedLogEvent() async throws {
         let container = try makeContainer()
         let ctx = ModelContext(container)
-        let service = OTLPIngestionService(modelContext: ctx)
+        let service = OTLPIngestionService(modelContainer: container)
 
         let data = try makeLogRequest(
             eventName: "skill_activated",
@@ -276,7 +200,7 @@ struct OTLPIngestionServiceTests {
             invocationTrigger: "claude-proactive",
             skillSource: "userSettings"
         )
-        service.ingest(.logs(data))
+        await service.ingest(.logs(data))
 
         let events = try ctx.fetch(FetchDescriptor<LogEvent>())
         #expect(events.count == 1)
@@ -287,10 +211,10 @@ struct OTLPIngestionServiceTests {
         #expect(events[0].skillSource == "userSettings")
     }
 
-    @Test func ingestsUserPromptLogEventWithCommandName() throws {
+    @Test func ingestsUserPromptLogEventWithCommandName() async throws {
         let container = try makeContainer()
         let ctx = ModelContext(container)
-        let service = OTLPIngestionService(modelContext: ctx)
+        let service = OTLPIngestionService(modelContainer: container)
 
         let data = try makeLogRequest(
             eventName: "user_prompt",
@@ -298,7 +222,7 @@ struct OTLPIngestionServiceTests {
             commandName: "otel-test",
             commandSource: "custom"
         )
-        service.ingest(.logs(data))
+        await service.ingest(.logs(data))
 
         let events = try ctx.fetch(FetchDescriptor<LogEvent>())
         #expect(events.count == 1)
@@ -309,25 +233,25 @@ struct OTLPIngestionServiceTests {
         #expect(events[0].skillSource == "custom")
     }
 
-    @Test func ignoresUserPromptWithoutCommandName() throws {
+    @Test func ignoresUserPromptWithoutCommandName() async throws {
         let container = try makeContainer()
         let ctx = ModelContext(container)
-        let service = OTLPIngestionService(modelContext: ctx)
+        let service = OTLPIngestionService(modelContainer: container)
 
         let data = try makeLogRequest(eventName: "user_prompt")
-        service.ingest(.logs(data))
+        await service.ingest(.logs(data))
 
         let events = try ctx.fetch(FetchDescriptor<LogEvent>())
         #expect(events.isEmpty)
     }
 
-    @Test func ignoresOtherLogEvents() throws {
+    @Test func ignoresOtherLogEvents() async throws {
         let container = try makeContainer()
         let ctx = ModelContext(container)
-        let service = OTLPIngestionService(modelContext: ctx)
+        let service = OTLPIngestionService(modelContainer: container)
 
         let data = try makeLogRequest(eventName: "api_request")
-        service.ingest(.logs(data))
+        await service.ingest(.logs(data))
 
         let events = try ctx.fetch(FetchDescriptor<LogEvent>())
         #expect(events.isEmpty)
@@ -335,8 +259,7 @@ struct OTLPIngestionServiceTests {
 
     @Test func ingestLogsPostsOtlpLogsIngestedNotification() async throws {
         let container = try makeContainer()
-        let ctx = ModelContext(container)
-        let service = OTLPIngestionService(modelContext: ctx)
+        let service = OTLPIngestionService(modelContainer: container)
 
         // `queue: nil` runs the observer synchronously on the posting thread, so the
         // confirmation is recorded before the body returns no matter which thread the
@@ -350,14 +273,14 @@ struct OTLPIngestionServiceTests {
             defer { NotificationCenter.default.removeObserver(token) }
 
             let data = try makeLogRequest(eventName: "skill_activated")
-            service.ingest(.logs(data))
+            await service.ingest(.logs(data))
         }
     }
 
-    @Test func deletesSpansOlderThanRetentionDays() throws {
+    @Test func deletesSpansOlderThanRetentionDays() async throws {
         let container = try makeContainer()
         let context = ModelContext(container)
-        let service = OTLPIngestionService(modelContext: context)
+        let service = OTLPIngestionService(modelContainer: container)
 
         let old = OTLPSpan(
             traceId: "old", spanId: "s1",
@@ -375,17 +298,17 @@ struct OTLPIngestionServiceTests {
         context.insert(recent)
         try context.save()
 
-        service.deleteOldData(retentionDays: 180)
+        await service.deleteOldData(retentionDays: 180)
 
         let spans = try context.fetch(FetchDescriptor<OTLPSpan>())
         #expect(spans.count == 1)
         #expect(spans[0].name == "recent-span")
     }
 
-    @Test func ingestsMetricDataPointsFromSumMetric() throws {
+    @Test func ingestsMetricDataPointsFromSumMetric() async throws {
         let container = try makeContainer()
         let context = ModelContext(container)
-        let service = OTLPIngestionService(modelContext: context)
+        let service = OTLPIngestionService(modelContainer: container)
 
         var dp = Opentelemetry_Proto_Metrics_V1_NumberDataPoint()
         dp.timeUnixNano = 2_000_000_000
@@ -412,7 +335,7 @@ struct OTLPIngestionServiceTests {
         var request = Opentelemetry_Proto_Collector_Metrics_V1_ExportMetricsServiceRequest()
         request.resourceMetrics = [rm]
 
-        service.ingest(.metrics(try request.serializedData()))
+        await service.ingest(.metrics(try request.serializedData()))
 
         let fetched = try context.fetch(FetchDescriptor<MetricDataPoint>())
         #expect(fetched.count == 1)
@@ -425,10 +348,10 @@ struct OTLPIngestionServiceTests {
         #expect(fetched[0].attributes[0].value == "added")
     }
 
-    @Test func ingestsMetricDataPointsFromGaugeMetric() throws {
+    @Test func ingestsMetricDataPointsFromGaugeMetric() async throws {
         let container = try makeContainer()
         let context = ModelContext(container)
-        let service = OTLPIngestionService(modelContext: context)
+        let service = OTLPIngestionService(modelContainer: container)
 
         var dp = Opentelemetry_Proto_Metrics_V1_NumberDataPoint()
         dp.timeUnixNano = 1_000_000_000
@@ -450,7 +373,7 @@ struct OTLPIngestionServiceTests {
         var request = Opentelemetry_Proto_Collector_Metrics_V1_ExportMetricsServiceRequest()
         request.resourceMetrics = [rm]
 
-        service.ingest(.metrics(try request.serializedData()))
+        await service.ingest(.metrics(try request.serializedData()))
 
         let fetched = try context.fetch(FetchDescriptor<MetricDataPoint>())
         #expect(fetched.count == 1)
@@ -459,10 +382,88 @@ struct OTLPIngestionServiceTests {
         #expect(fetched[0].attributes.isEmpty)
     }
 
-    @Test func deletesMetricsOlderThanRetentionDays() throws {
+    @Test func ingestPopulatesTypeColumnForMetricDataPoint() async throws {
         let container = try makeContainer()
         let context = ModelContext(container)
-        let service = OTLPIngestionService(modelContext: context)
+        let service = OTLPIngestionService(modelContainer: container)
+
+        var dp = Opentelemetry_Proto_Metrics_V1_NumberDataPoint()
+        dp.timeUnixNano = 2_000_000_000
+        dp.asInt = 50
+        var typeAttr = Opentelemetry_Proto_Common_V1_KeyValue()
+        typeAttr.key = "type"
+        typeAttr.value.stringValue = "removed"
+        dp.attributes = [typeAttr]
+
+        var sum = Opentelemetry_Proto_Metrics_V1_Sum()
+        sum.dataPoints = [dp]
+
+        var metric = Opentelemetry_Proto_Metrics_V1_Metric()
+        metric.name = "claude_code.lines_of_code.count"
+        metric.sum = sum
+
+        var sm = Opentelemetry_Proto_Metrics_V1_ScopeMetrics()
+        sm.metrics = [metric]
+
+        var rm = Opentelemetry_Proto_Metrics_V1_ResourceMetrics()
+        rm.scopeMetrics = [sm]
+
+        var request = Opentelemetry_Proto_Collector_Metrics_V1_ExportMetricsServiceRequest()
+        request.resourceMetrics = [rm]
+
+        await service.ingest(.metrics(try request.serializedData()))
+
+        let fetched = try context.fetch(FetchDescriptor<MetricDataPoint>())
+        #expect(fetched.count == 1)
+        #expect(fetched[0].type == "removed")
+    }
+
+    // MARK: - backfillMetricTypes
+
+    @Test func backfillSetsMetricTypeFromAttribute() async throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        // Simulates a row written before `type` became a typed column.
+        let point = MetricDataPoint(
+            metricName: "claude_code.lines_of_code.count",
+            metricUnit: "{lines}",
+            timestamp: Date(),
+            value: 12,
+            attributes: [MetricAttribute(key: "type", value: "added")]
+        )
+        point.type = nil
+        context.insert(point)
+        try context.save()
+
+        await OTLPIngestionService(modelContainer: container).backfillMetricTypes()
+
+        let fetched = try context.fetch(FetchDescriptor<MetricDataPoint>())
+        #expect(fetched[0].type == "added")
+    }
+
+    @Test func backfillLeavesExistingMetricTypeUntouched() async throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        context.insert(MetricDataPoint(
+            metricName: "claude_code.lines_of_code.count",
+            metricUnit: "{lines}",
+            timestamp: Date(),
+            value: 12,
+            type: "added",
+            attributes: [MetricAttribute(key: "type", value: "removed")]
+        ))
+        try context.save()
+
+        await OTLPIngestionService(modelContainer: container).backfillMetricTypes()
+
+        let fetched = try context.fetch(FetchDescriptor<MetricDataPoint>())
+        #expect(fetched[0].type == "added")
+    }
+
+    @Test func deletesMetricsOlderThanRetentionDays() async throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let service = OTLPIngestionService(modelContainer: container)
 
         context.insert(MetricDataPoint(
             metricName: "claude_code.lines_of_code.count",
@@ -480,7 +481,7 @@ struct OTLPIngestionServiceTests {
         ))
         try context.save()
 
-        service.deleteOldData(retentionDays: 7)
+        await service.deleteOldData(retentionDays: 7)
 
         let remaining = try context.fetch(FetchDescriptor<MetricDataPoint>())
         #expect(remaining.count == 1)

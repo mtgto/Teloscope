@@ -198,22 +198,24 @@ struct MetricsRepositoryTests {
 
     // MARK: - Metric data points
 
-    @Test func linesOfCodeComputedFromMetricDataPointAttributes() async throws {
+    @Test func linesOfCodeComputedFromTypedTypeColumn() async throws {
         let container = try makeContainer()
         let ctx = ModelContext(container)
+        // No MetricAttribute rows: the summary must read the typed `type` column so
+        // that computeSummary never materializes the attributes relationship.
         ctx.insert(MetricDataPoint(
             metricName: "claude_code.lines_of_code.count",
             metricUnit: "count",
             timestamp: now,
             value: 42,
-            attributes: [MetricAttribute(key: "type", value: "added")]
+            type: "added"
         ))
         ctx.insert(MetricDataPoint(
             metricName: "claude_code.lines_of_code.count",
             metricUnit: "count",
             timestamp: now,
             value: 7,
-            attributes: [MetricAttribute(key: "type", value: "removed")]
+            type: "removed"
         ))
         try ctx.save()
 
@@ -222,5 +224,24 @@ struct MetricsRepositoryTests {
         let (_, summary) = try await repo.computeSummary(dateRange: range, selectedModels: [])
         #expect(summary.linesOfCodeAdded == 42)
         #expect(summary.linesOfCodeRemoved == 7)
+    }
+
+    @Test func metricsOtherThanLinesOfCodeDoNotAffectSummary() async throws {
+        let container = try makeContainer()
+        let ctx = ModelContext(container)
+        ctx.insert(MetricDataPoint(
+            metricName: "claude_code.token.usage",
+            metricUnit: "tokens",
+            timestamp: now,
+            value: 9999,
+            type: "input"
+        ))
+        try ctx.save()
+
+        let repo = MetricsRepository(modelContainer: container)
+        let range = DateInterval(start: now.addingTimeInterval(-1), end: now.addingTimeInterval(1))
+        let (_, summary) = try await repo.computeSummary(dateRange: range, selectedModels: [])
+        #expect(summary.linesOfCodeAdded == 0)
+        #expect(summary.linesOfCodeRemoved == 0)
     }
 }
