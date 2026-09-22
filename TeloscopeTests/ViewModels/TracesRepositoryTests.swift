@@ -7,20 +7,10 @@ import Foundation
 struct TracesRepositoryTests {
     private let now = Date(timeIntervalSince1970: 1_000_000)
 
-    private func makeContainer() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        return try ModelContainer(
-            for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
-                 ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
-                 MetricDataPoint.self, MetricAttribute.self,
-            configurations: config
-        )
-    }
-
     // MARK: - Session list
 
     @Test func sessionsGroupTracesByRootSpanSessionId() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "r1", name: "root-1",
                             startTime: now, endTime: now.addingTimeInterval(1), sessionId: "A"))
@@ -43,7 +33,7 @@ struct TracesRepositoryTests {
     }
 
     @Test func rootSpanWithoutSessionIdIsGroupedAsUnknown() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "r1", name: "root-1",
                             startTime: now, endTime: now.addingTimeInterval(1)))
@@ -55,7 +45,7 @@ struct TracesRepositoryTests {
     }
 
     @Test func sessionsAndTracesAreSortedNewestFirst() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "old", spanId: "r1", name: "root",
                             startTime: now, endTime: now.addingTimeInterval(1), sessionId: "A"))
@@ -74,7 +64,7 @@ struct TracesRepositoryTests {
     }
 
     @Test func traceRowUsesRootSpanNameAndStartTime() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "r1", name: "claude_code.interaction",
                             startTime: now, endTime: now.addingTimeInterval(5), sessionId: "A"))
@@ -91,7 +81,7 @@ struct TracesRepositoryTests {
     }
 
     @Test func childSpansDoNotProduceExtraTraceRows() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "r1", name: "root",
                             startTime: now, endTime: now.addingTimeInterval(1), sessionId: "A"))
@@ -108,7 +98,7 @@ struct TracesRepositoryTests {
     }
 
     @Test func duplicateRootSpansForSameTraceProduceOneRowWithEarliestStart() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "r1", name: "first",
                             startTime: now, endTime: now.addingTimeInterval(1), sessionId: "A"))
@@ -125,7 +115,7 @@ struct TracesRepositoryTests {
     }
 
     @Test func emptyStoreProducesNoSessions() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let sessions = try await TracesRepository(modelContainer: container).loadSessions()
         #expect(sessions.isEmpty)
     }
@@ -133,7 +123,7 @@ struct TracesRepositoryTests {
     // MARK: - Span loading for a selection
 
     @Test func loadSpansReturnsRequestedTracesSortedByStartTime() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "late", name: "late",
                             startTime: now.addingTimeInterval(10), endTime: now.addingTimeInterval(11)))
@@ -149,7 +139,7 @@ struct TracesRepositoryTests {
     }
 
     @Test func loadSpansCoversEveryTraceOfASession() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         for (traceId, spanId) in [("t1", "s1"), ("t2", "s2"), ("t3", "s3")] {
             ctx.insert(OTLPSpan(traceId: traceId, spanId: spanId, name: "span",
@@ -163,7 +153,7 @@ struct TracesRepositoryTests {
     }
 
     @Test func loadSpansWithNoTraceIdsReturnsEmpty() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1", name: "span",
                             startTime: now, endTime: now.addingTimeInterval(1)))
@@ -175,7 +165,7 @@ struct TracesRepositoryTests {
     }
 
     @Test func loadSpansCarriesTypedColumnsNeededBySummaryAndChart() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1", parentSpanId: "root",
                             name: "claude_code.llm_request",

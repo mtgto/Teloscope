@@ -6,18 +6,8 @@ import Foundation
 @testable import Teloscope
 
 struct OTLPIngestionServiceTests {
-    private func makeContainer() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        return try ModelContainer(
-            for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
-            ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
-            MetricAttribute.self, MetricDataPoint.self,
-            configurations: config
-        )
-    }
-
     @Test func logEventCanBeInserted() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         let event = LogEvent(
             eventName: "skill_activated",
@@ -35,7 +25,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func ingestsSpanFromTracesRequest() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let context = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -76,7 +66,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func ingestPopulatesTypedColumnsForClaudeCodeSpan() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let context = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -125,7 +115,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func ingestPopulatesDecisionForToolSpan() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let context = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -189,7 +179,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func ingestsSkillActivatedLogEvent() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -212,7 +202,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func ingestsUserPromptLogEventWithCommandName() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -234,7 +224,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func ignoresUserPromptWithoutCommandName() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -246,7 +236,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func ignoresOtherLogEvents() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -258,7 +248,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func ingestLogsPostsOtlpLogsIngestedNotification() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let service = OTLPIngestionService(modelContainer: container)
 
         // `queue: nil` runs the observer synchronously on the posting thread, so the
@@ -278,7 +268,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func deletesSpansOlderThanRetentionDays() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let context = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -306,7 +296,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func deletesResourceSpansOlderThanRetentionDays() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let context = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -336,7 +326,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func deletesResourceLogsOlderThanRetentionDays() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let context = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -352,7 +342,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func deletesLogEventsOlderThanRetentionDays() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let context = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -376,7 +366,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func ingestsMetricDataPointsFromSumMetric() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let context = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -419,7 +409,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func ingestsMetricDataPointsFromGaugeMetric() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let context = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -453,7 +443,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func ingestPopulatesTypeColumnForMetricDataPoint() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let context = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 
@@ -491,7 +481,7 @@ struct OTLPIngestionServiceTests {
     // MARK: - backfillMetricTypes
 
     @Test func backfillSetsMetricTypeFromAttribute() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let context = ModelContext(container)
         // Simulates a row written before `type` became a typed column.
         let point = MetricDataPoint(
@@ -512,7 +502,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func backfillLeavesExistingMetricTypeUntouched() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let context = ModelContext(container)
         context.insert(MetricDataPoint(
             metricName: "claude_code.lines_of_code.count",
@@ -531,7 +521,7 @@ struct OTLPIngestionServiceTests {
     }
 
     @Test func deletesMetricsOlderThanRetentionDays() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let context = ModelContext(container)
         let service = OTLPIngestionService(modelContainer: container)
 

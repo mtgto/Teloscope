@@ -7,20 +7,10 @@ import Foundation
 struct MetricsRepositoryTests {
     private let now = Date(timeIntervalSince1970: 1_000_000)
 
-    private func makeContainer() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        return try ModelContainer(
-            for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
-                 ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
-                 MetricDataPoint.self, MetricAttribute.self,
-            configurations: config
-        )
-    }
-
     // MARK: - Date range filtering
 
     @Test func spansOutsideDateRangeAreExcluded() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "in",
             name: "claude_code.llm_request",
@@ -39,7 +29,7 @@ struct MetricsRepositoryTests {
     }
 
     @Test func emptyRangeReturnsZeroSummary() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1",
             name: "claude_code.llm_request",
@@ -59,7 +49,7 @@ struct MetricsRepositoryTests {
     // MARK: - Available models
 
     @Test func availableModelsReflectsDateFilteredSpans() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1",
             name: "claude_code.llm_request",
@@ -79,7 +69,7 @@ struct MetricsRepositoryTests {
     }
 
     @Test func availableModelsSortedAlphabetically() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         for (id, model) in [("s1", "claude-sonnet-4"), ("s2", "claude-opus-4"), ("s3", "claude-haiku-4")] {
             ctx.insert(OTLPSpan(traceId: "t1", spanId: id,
@@ -98,7 +88,7 @@ struct MetricsRepositoryTests {
     // MARK: - Model filter
 
     @Test func modelFilterRestrictsLLMRequestSpans() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1",
             name: "claude_code.llm_request",
@@ -117,7 +107,7 @@ struct MetricsRepositoryTests {
     }
 
     @Test func modelFilterPassesNonLLMSpansThrough() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         // LLM request that won't pass filter
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1",
@@ -141,7 +131,7 @@ struct MetricsRepositoryTests {
     // MARK: - Skill ranking
 
     @Test func skillRankingIncludesLogEventsInDateRange() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(LogEvent(
             eventName: "skill_activated",
@@ -173,7 +163,7 @@ struct MetricsRepositoryTests {
     // MARK: - Multiple spans aggregation
 
     @Test func tokenTotalsAggregatedAcrossSpans() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1",
             name: "claude_code.llm_request",
@@ -199,7 +189,7 @@ struct MetricsRepositoryTests {
     // MARK: - Metric data points
 
     @Test func linesOfCodeComputedFromTypedTypeColumn() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         // No MetricAttribute rows: the summary must read the typed `type` column so
         // that computeSummary never materializes the attributes relationship.
@@ -227,7 +217,7 @@ struct MetricsRepositoryTests {
     }
 
     @Test func metricsOtherThanLinesOfCodeDoNotAffectSummary() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(MetricDataPoint(
             metricName: "claude_code.token.usage",

@@ -8,16 +8,6 @@ import Foundation
 struct TracesListModelTests {
     private let now = Date(timeIntervalSince1970: 1_000_000)
 
-    private func makeContainer() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        return try ModelContainer(
-            for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
-                 ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
-                 MetricDataPoint.self, MetricAttribute.self,
-            configurations: config
-        )
-    }
-
     private func seed(_ container: ModelContainer) throws {
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "r1", name: "root",
@@ -41,7 +31,7 @@ struct TracesListModelTests {
     // than by the model, it renders an empty chart while the spans are still loading
     // and the user sees a blank panel instead of a progress indicator.
     @Test func selectionEntersLoadingStateBeforeAnySuspension() throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         try seed(container)
         let model = TracesListModel()
 
@@ -57,7 +47,7 @@ struct TracesListModelTests {
     // The list has nothing to show until the first reload finishes, so it needs a
     // loading flag to distinguish "still loading" from "no traces recorded".
     @Test func sessionsEnterLoadingStateBeforeAnySuspension() throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         try seed(container)
         let model = TracesListModel()
 
@@ -67,7 +57,7 @@ struct TracesListModelTests {
     }
 
     @Test func sessionLoadingFlagClearsOnceLoaded() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         try seed(container)
         let model = TracesListModel()
 
@@ -80,7 +70,7 @@ struct TracesListModelTests {
     }
 
     @Test func sessionLoadingFlagClearsWhenStoreIsEmpty() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let model = TracesListModel()
 
         model.reloadSessions(container: container)
@@ -91,7 +81,7 @@ struct TracesListModelTests {
     }
 
     @Test func selectionResolvesToLoadedSpans() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         try seed(container)
         let model = TracesListModel()
 
@@ -106,7 +96,7 @@ struct TracesListModelTests {
     }
 
     @Test func sessionSelectionLoadsEveryTraceOfTheSession() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         try seed(container)
         let model = TracesListModel()
 
@@ -124,7 +114,7 @@ struct TracesListModelTests {
     }
 
     @Test func clearingSelectionReturnsToEmpty() throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let model = TracesListModel()
 
         model.loadSelection(.trace("t1"), container: container)
@@ -138,7 +128,7 @@ struct TracesListModelTests {
 
     // A slow load for an abandoned selection must not overwrite the newer one.
     @Test func staleSelectionResultDoesNotOverwriteNewerSelection() async throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let ctx = ModelContext(container)
         ctx.insert(OTLPSpan(traceId: "t1", spanId: "s1", name: "first",
                             startTime: now, endTime: now.addingTimeInterval(1)))
