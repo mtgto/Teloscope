@@ -5,8 +5,17 @@ import Charts
 struct PieSlice: Identifiable {
     let id = UUID()
     let label: LocalizedStringKey
+    /// Trailing text kept fully visible even when `label` is truncated (e.g. "(405)").
+    let detail: String?
     let value: Double
     let color: Color
+
+    init(label: LocalizedStringKey, detail: String? = nil, value: Double, color: Color) {
+        self.label = label
+        self.detail = detail
+        self.value = value
+        self.color = color
+    }
 }
 
 struct PieWidgetView: View {
@@ -20,7 +29,6 @@ struct PieWidgetView: View {
     var body: some View {
         GroupBox {
             HStack(alignment: .center, spacing: 12) {
-                Spacer()
                 // Charts does not support .redacted, so use a plain Circle for .placeholder.
                 // For .invalidated, the real chart is shown and blurred by the parent redaction.
                 if redactionReasons.contains(.placeholder) || slices.isEmpty {
@@ -70,16 +78,29 @@ struct PieWidgetView: View {
                                 Circle()
                                     .fill(slice.color)
                                     .frame(width: 8, height: 8)
+                                // The label truncates while the detail keeps its ideal width,
+                                // so counts stay readable in narrow widgets.
                                 Text(slice.label)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
+                                    .truncationMode(.tail)
+                                if let detail = slice.detail {
+                                    Text(detail)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                        .fixedSize()
+                                }
                             }
                         }
                     }
                 }
-                Spacer()
             }
+            // Without spacers the legend can claim every remaining point, and the outer frame
+            // centers the whole row while it still fits. Spacers would instead add their own
+            // HStack spacing and truncate the labels earlier.
+            .frame(maxWidth: .infinity)
             .padding(8)
         } label: {
             Text(title).unredacted()
@@ -91,8 +112,8 @@ struct PieWidgetView: View {
     PieWidgetView(
         title: "Approval Rate",
         slices: [
-            PieSlice(label: "Approved (\(35))", value: 35, color: .green),
-            PieSlice(label: "Rejected (\(10))", value: 10, color: .red),
+            PieSlice(label: "Approved", detail: "(35)", value: 35, color: .green),
+            PieSlice(label: "Rejected", detail: "(10)", value: 10, color: .red),
         ],
         centerLabel: "78%"
     )
@@ -117,6 +138,21 @@ struct PieWidgetView: View {
         centerLabel: nil
     )
     .redacted(reason: .placeholder)
+    .frame(width: 260)
+    .padding()
+}
+
+#Preview("Long Labels") {
+    PieWidgetView(
+        title: "Model Distribution",
+        slices: [
+            PieSlice(label: "claude-opus-5", detail: "(405)", value: 405, color: .blue),
+            PieSlice(label: "claude-sonnet-5[1m]", detail: "(193)", value: 193, color: .orange),
+            PieSlice(label: "claude-sonnet-5", detail: "(57)", value: 57, color: .green),
+            PieSlice(label: "claude-haiku-4-5-20251001", detail: "(3)", value: 3, color: .pink),
+        ],
+        centerLabel: nil
+    )
     .frame(width: 260)
     .padding()
 }

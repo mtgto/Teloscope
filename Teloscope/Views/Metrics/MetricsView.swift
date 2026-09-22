@@ -146,11 +146,11 @@ struct MetricsView: View {
         let centerLabel: String?
         if let m, m.hasApprovalData {
             var s = [
-                PieSlice(label: "Approved (\(m.approvalCount))", value: Double(m.approvalCount), color: .green),
-                PieSlice(label: "Rejected (\(m.rejectionCount))", value: Double(m.rejectionCount), color: .red),
+                PieSlice(label: "Approved", detail: "(\(m.approvalCount))", value: Double(m.approvalCount), color: .green),
+                PieSlice(label: "Rejected", detail: "(\(m.rejectionCount))", value: Double(m.rejectionCount), color: .red),
             ]
             if m.unknownCount > 0 {
-                s.append(PieSlice(label: "Unknown (\(m.unknownCount))", value: Double(m.unknownCount), color: .gray))
+                s.append(PieSlice(label: "Unknown", detail: "(\(m.unknownCount))", value: Double(m.unknownCount), color: .gray))
             }
             slices = s
             centerLabel = m.approvalRate.map { "\(Int($0 * 100))%" }
@@ -246,7 +246,8 @@ struct MetricsView: View {
         let palette: [Color] = [.blue, .orange, .green, .purple, .teal, .pink]
         let slices = m?.modelDistribution.enumerated().map { i, entry in
             PieSlice(
-                label: "\(entry.model) (\(entry.requestCount))",
+                label: "\(entry.model)",
+                detail: "(\(entry.requestCount))",
                 value: Double(entry.requestCount),
                 color: palette[i % palette.count]
             )

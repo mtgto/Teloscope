@@ -42,8 +42,8 @@ import Testing
             PieWidgetView(
                 title: "Approval Rate",
                 slices: [
-                    PieSlice(label: "Approved (35)", value: 35, color: .green),
-                    PieSlice(label: "Rejected (10)", value: 10, color: .red),
+                    PieSlice(label: "Approved", detail: "(35)", value: 35, color: .green),
+                    PieSlice(label: "Rejected", detail: "(10)", value: 10, color: .red),
                 ],
                 centerLabel: "78%"
             )
