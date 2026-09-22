@@ -6,18 +6,8 @@ import Foundation
 
 @MainActor
 struct BackgroundMaintenanceTests {
-    private func makeContainer() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        return try ModelContainer(
-            for: ResourceSpans.self, ScopeSpans.self, OTLPSpan.self, SpanAttribute.self,
-            ResourceAttribute.self, ResourceMetrics.self, ResourceLogs.self, LogEvent.self,
-            MetricAttribute.self, MetricDataPoint.self,
-            configurations: config
-        )
-    }
-
     @Test func startIfNeededSchedulesOneTimer() throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let maintenance = BackgroundMaintenance()
 
         maintenance.startIfNeeded(container: container, retentionDays: 180)
@@ -28,7 +18,7 @@ struct BackgroundMaintenanceTests {
     /// The window's `.task` re-runs every time the window is reopened, so a second call
     /// must keep the timer it already has rather than stacking another one.
     @Test func startIfNeededKeepsTheExistingTimer() throws {
-        let container = try makeContainer()
+        let container = try makeTestModelContainer()
         let maintenance = BackgroundMaintenance()
 
         maintenance.startIfNeeded(container: container, retentionDays: 180)

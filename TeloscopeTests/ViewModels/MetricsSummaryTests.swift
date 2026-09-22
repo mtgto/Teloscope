@@ -11,11 +11,29 @@ struct MetricsSummaryTests {
     private let wednesday14h = Date(timeIntervalSince1970: 1_704_279_600) // 2024-01-03 13:00 UTC
     private let fullRange = DateInterval(start: .distantPast, end: .distantFuture)
 
-    private func snap(_ name: String, at date: Date = Date(), toolName: String? = nil) -> SpanSnapshot {
+    private func snap(
+        _ name: String,
+        at date: Date = Date(),
+        sessionId: String? = nil,
+        model: String? = nil,
+        inputTokens: Int64? = nil,
+        outputTokens: Int64? = nil,
+        cacheReadTokens: Int64? = nil,
+        cacheCreationTokens: Int64? = nil,
+        decision: String? = nil,
+        toolName: String? = nil
+    ) -> SpanSnapshot {
         SpanSnapshot(OTLPSpan(
             traceId: "t", spanId: UUID().uuidString,
             name: name,
             startTime: date, endTime: date.addingTimeInterval(1),
+            sessionId: sessionId,
+            model: model,
+            inputTokens: inputTokens,
+            outputTokens: outputTokens,
+            cacheReadTokens: cacheReadTokens,
+            cacheCreationTokens: cacheCreationTokens,
+            decision: decision,
             toolName: toolName
         ))
     }
@@ -251,5 +269,87 @@ struct MetricsSummaryTests {
         let summary = MetricsSummary(spans: [], numberDataPoints: points, dateRange: fullRange)
         #expect(summary.linesOfCodeAdded == 10)
         #expect(summary.linesOfCodeRemoved == 0)
+    }
+
+    // MARK: - Token totals
+
+    @Test func tokenTotalsAreSummed() {
+        let spans = [
+            snap("claude_code.llm_request", model: "claude-opus-4",
+                 inputTokens: 100, outputTokens: 50, cacheReadTokens: 20, cacheCreationTokens: 25),
+            snap("claude_code.llm_request", model: "claude-sonnet-4",
+                 inputTokens: 200, outputTokens: 80, cacheReadTokens: 10, cacheCreationTokens: 75),
+        ]
+        let summary = MetricsSummary(spans: spans, dateRange: fullRange)
+        #expect(summary.totalInputTokens == 300)
+        #expect(summary.totalOutputTokens == 130)
+        #expect(summary.totalCacheReadTokens == 30)
+        #expect(summary.totalCacheCreationTokens == 100)
+    }
+
+    // MARK: - sessionCount
+
+    @Test func sessionCountDeduplicates() {
+        let spans = [
+            snap("claude_code.llm_request", sessionId: "A"),
+            snap("claude_code.tool", sessionId: "A", toolName: "bash"),
+            snap("claude_code.llm_request", sessionId: "B"),
+        ]
+        let summary = MetricsSummary(spans: spans, dateRange: fullRange)
+        #expect(summary.sessionCount == 2)
+    }
+
+    // MARK: - Approval rate
+
+    @Test func approvalRateCalculated() {
+        let spans = [
+            snap("claude_code.tool.blocked_on_user", decision: "accept"),
+            snap("claude_code.tool.blocked_on_user", decision: "reject"),
+        ]
+        let summary = MetricsSummary(spans: spans, dateRange: fullRange)
+        #expect(summary.hasApprovalData)
+        #expect(summary.approvalCount == 1)
+        #expect(summary.rejectionCount == 1)
+        #expect(summary.approvalRate == 0.5)
+    }
+
+    @Test func approvalRateNilWithNoData() {
+        let summary = MetricsSummary(spans: [snap("claude_code.llm_request")], dateRange: fullRange)
+        #expect(!summary.hasApprovalData)
+        #expect(summary.approvalRate == nil)
+    }
+
+    // MARK: - modelDistribution
+
+    @Test func modelDistributionSortedByCount() {
+        let spans = [
+            snap("claude_code.llm_request", model: "claude-opus-4"),
+            snap("claude_code.llm_request", model: "claude-sonnet-4"),
+            snap("claude_code.llm_request", model: "claude-sonnet-4"),
+        ]
+        let summary = MetricsSummary(spans: spans, dateRange: fullRange)
+        #expect(summary.modelDistribution.count == 2)
+        #expect(summary.modelDistribution[0].model == "claude-sonnet-4")
+        #expect(summary.modelDistribution[0].requestCount == 2)
+    }
+
+    // MARK: - Cost
+
+    @Test func costCalculatedFromPricing() {
+        let spans = [
+            snap("claude_code.llm_request", model: "claude-opus-4-5",
+                 inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0),
+        ]
+        let summary = MetricsSummary(spans: spans, dateRange: fullRange)
+        #expect(abs(summary.totalCostUSD - 5.0) < 0.001)
+    }
+
+    @Test func unknownModelZeroCost() {
+        let spans = [
+            snap("claude_code.llm_request", model: "unknown-model",
+                 inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0),
+        ]
+        let summary = MetricsSummary(spans: spans, dateRange: fullRange)
+        #expect(summary.totalCostUSD == 0.0)
     }
 }
