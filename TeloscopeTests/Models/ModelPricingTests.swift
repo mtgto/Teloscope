@@ -3,67 +3,56 @@ import Testing
 @testable import Teloscope
 
 struct ModelPricingTests {
-    @Test func knownModelOpusCost() throws {
-        let p = try #require(ModelPricing.pricing(for: "claude-opus-4-5"))
-        // 1M input tokens at $5/M
-        #expect(abs(p.cost(inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0) - 5.0) < 0.001)
+    /// One row of the published price table, in USD per million tokens.
+    /// Source: https://platform.claude.com/docs/en/about-claude/pricing
+    ///
+    /// `model` is the id passed to `pricing(for:)`. Rows using a dated or longer id
+    /// double as prefix-matching cases: they must fall through to a shorter entry
+    /// (`claude-opus-4-1-...` → `claude-opus-4`) or, for `claude-opus-5-5`, must *not*
+    /// fall through to the shorter `claude-opus-5`.
+    struct Rates: Sendable, CustomTestStringConvertible {
+        let model: String
+        let input: Double
+        let output: Double
+        let cacheRead: Double
+        let cacheWrite: Double
+
+        var testDescription: String { model }
     }
 
-    @Test func legacyOpus4KeepsOldPricing() throws {
-        // Claude Opus 4 / 4.1 predate the Opus 4.5 price drop
-        let p = try #require(ModelPricing.pricing(for: "claude-opus-4-1-20250805"))
-        #expect(abs(p.cost(inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0) - 15.0) < 0.001)
-    }
+    @Test(arguments: [
+        Rates(model: "claude-fable-5-1",           input: 10.0, output: 50.0, cacheRead: 0.25, cacheWrite: 12.50),
+        Rates(model: "claude-mythos-5-1",          input: 10.0, output: 50.0, cacheRead: 0.25, cacheWrite: 12.50),
+        Rates(model: "claude-fable-5",             input: 10.0, output: 50.0, cacheRead: 1.00, cacheWrite: 12.50),
+        Rates(model: "claude-mythos-5",            input: 10.0, output: 50.0, cacheRead: 1.00, cacheWrite: 12.50),
+        Rates(model: "claude-opus-5-5",            input:  4.0, output: 20.0, cacheRead: 0.20, cacheWrite:  5.00),
+        Rates(model: "claude-opus-5",              input:  5.0, output: 25.0, cacheRead: 0.50, cacheWrite:  6.25),
+        Rates(model: "claude-sonnet-5",            input:  2.0, output: 10.0, cacheRead: 0.20, cacheWrite:  2.50),
+        Rates(model: "claude-opus-4-8",            input:  5.0, output: 25.0, cacheRead: 0.50, cacheWrite:  6.25),
+        Rates(model: "claude-opus-4-7",            input:  5.0, output: 25.0, cacheRead: 0.50, cacheWrite:  6.25),
+        Rates(model: "claude-opus-4-6",            input:  5.0, output: 25.0, cacheRead: 0.50, cacheWrite:  6.25),
+        Rates(model: "claude-opus-4-5",            input:  5.0, output: 25.0, cacheRead: 0.50, cacheWrite:  6.25),
+        Rates(model: "claude-opus-4-1-20250805",   input: 15.0, output: 75.0, cacheRead: 1.50, cacheWrite: 18.75),
+        Rates(model: "claude-sonnet-4-6-20251022", input:  3.0, output: 15.0, cacheRead: 0.30, cacheWrite:  3.75),
+        Rates(model: "claude-haiku-4-5-20251001",  input:  1.0, output:  5.0, cacheRead: 0.10, cacheWrite:  1.25),
+        Rates(model: "claude-haiku-3-5",           input:  0.8, output:  4.0, cacheRead: 0.08, cacheWrite:  1.00),
+    ])
+    func costMatchesPublishedRates(_ rates: Rates) throws {
+        let p = try #require(ModelPricing.pricing(for: rates.model))
+        let million: Int64 = 1_000_000
 
-    @Test func prefixMatchingSonnet() throws {
-        // "claude-sonnet-4-6-20251022" should match "claude-sonnet-4" prefix
-        let p = try #require(ModelPricing.pricing(for: "claude-sonnet-4-6-20251022"))
-        #expect(abs(p.cost(inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0) - 3.0) < 0.001)
+        // Bill one token type at a time so a wrong rate names itself, then all four
+        // together to cover the summing.
+        #expect(abs(p.cost(inputTokens: million, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0) - rates.input) < 0.001)
+        #expect(abs(p.cost(inputTokens: 0, outputTokens: million, cacheReadTokens: 0, cacheCreationTokens: 0) - rates.output) < 0.001)
+        #expect(abs(p.cost(inputTokens: 0, outputTokens: 0, cacheReadTokens: million, cacheCreationTokens: 0) - rates.cacheRead) < 0.001)
+        #expect(abs(p.cost(inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: million) - rates.cacheWrite) < 0.001)
+
+        let total = rates.input + rates.output + rates.cacheRead + rates.cacheWrite
+        #expect(abs(p.cost(inputTokens: million, outputTokens: million, cacheReadTokens: million, cacheCreationTokens: million) - total) < 0.001)
     }
 
     @Test func unknownModelReturnsNil() {
         #expect(ModelPricing.pricing(for: "gpt-4") == nil)
-    }
-
-    @Test func costSumsAllTokenTypes() throws {
-        let p = try #require(ModelPricing.pricing(for: "claude-opus-4-5"))
-        // 0 input, 1M output at $25, 1M cache read at $0.5 → $25.5
-        #expect(abs(p.cost(inputTokens: 0, outputTokens: 1_000_000, cacheReadTokens: 1_000_000, cacheCreationTokens: 0) - 25.5) < 0.001)
-    }
-
-    @Test func fable5Pricing() throws {
-        let p = try #require(ModelPricing.pricing(for: "claude-fable-5"))
-        // 1M input at $10, 1M output at $50, 1M cache read at $1 → $61
-        #expect(abs(p.cost(inputTokens: 1_000_000, outputTokens: 1_000_000, cacheReadTokens: 1_000_000, cacheCreationTokens: 0) - 61.0) < 0.001)
-    }
-
-    @Test func sonnet5Pricing() throws {
-        let p = try #require(ModelPricing.pricing(for: "claude-sonnet-5"))
-        // 1M input at $3/M
-        #expect(abs(p.cost(inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0) - 3.0) < 0.001)
-    }
-
-    @Test func opus5Pricing() throws {
-        let p = try #require(ModelPricing.pricing(for: "claude-opus-5"))
-        // 1M input at $5, 1M output at $25, 1M cache read at $0.5 -> $30.5
-        #expect(abs(p.cost(inputTokens: 1_000_000, outputTokens: 1_000_000, cacheReadTokens: 1_000_000, cacheCreationTokens: 0) - 30.5) < 0.001)
-    }
-
-    @Test func mythos5Pricing() throws {
-        let p = try #require(ModelPricing.pricing(for: "claude-mythos-5"))
-        // 1M input at $10/M
-        #expect(abs(p.cost(inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0) - 10.0) < 0.001)
-    }
-
-    @Test func cacheCreationCostsMoreThanInput() throws {
-        let p = try #require(ModelPricing.pricing(for: "claude-opus-5"))
-        // Cache writes bill at 1.25x the base input rate: 1M tokens at $5/M -> $6.25
-        #expect(abs(p.cost(inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 1_000_000) - 6.25) < 0.001)
-    }
-
-    @Test func haiku45Pricing() throws {
-        let p = try #require(ModelPricing.pricing(for: "claude-haiku-4-5-20251001"))
-        // 1M input at $1/M
-        #expect(abs(p.cost(inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0) - 1.0) < 0.001)
     }
 }
