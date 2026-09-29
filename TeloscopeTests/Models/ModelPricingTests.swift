@@ -27,6 +27,7 @@ struct ModelPricingTests {
         Rates(model: "claude-mythos-5",            input: 10.0, output: 50.0, cacheRead: 1.00, cacheWrite: 12.50),
         Rates(model: "claude-opus-5-5",            input:  4.0, output: 20.0, cacheRead: 0.20, cacheWrite:  5.00),
         Rates(model: "claude-opus-5",              input:  5.0, output: 25.0, cacheRead: 0.50, cacheWrite:  6.25),
+        Rates(model: "claude-sonnet-5-5",          input:  2.0, output: 10.0, cacheRead: 0.20, cacheWrite:  2.50),
         Rates(model: "claude-sonnet-5",            input:  2.0, output: 10.0, cacheRead: 0.20, cacheWrite:  2.50),
         Rates(model: "claude-opus-4-8",            input:  5.0, output: 25.0, cacheRead: 0.50, cacheWrite:  6.25),
         Rates(model: "claude-opus-4-7",            input:  5.0, output: 25.0, cacheRead: 0.50, cacheWrite:  6.25),

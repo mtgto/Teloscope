@@ -21,6 +21,7 @@ struct ModelPricing {
         ("claude-mythos-5",   ModelPricing(inputPerMillion: 10.0, outputPerMillion: 50.0, cacheReadPerMillion: 1.00)),
         ("claude-opus-5-5",   ModelPricing(inputPerMillion:  4.0, outputPerMillion: 20.0, cacheReadPerMillion: 0.20)),
         ("claude-opus-5",     ModelPricing(inputPerMillion:  5.0, outputPerMillion: 25.0, cacheReadPerMillion: 0.50)),
+        ("claude-sonnet-5-5", ModelPricing(inputPerMillion:  2.0, outputPerMillion: 10.0, cacheReadPerMillion: 0.20)),
         ("claude-sonnet-5",   ModelPricing(inputPerMillion:  2.0, outputPerMillion: 10.0, cacheReadPerMillion: 0.20)),
         ("claude-opus-4-8",   ModelPricing(inputPerMillion:  5.0, outputPerMillion: 25.0, cacheReadPerMillion: 0.50)),
         ("claude-opus-4-7",   ModelPricing(inputPerMillion:  5.0, outputPerMillion: 25.0, cacheReadPerMillion: 0.50)),
