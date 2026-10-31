@@ -7,7 +7,6 @@ workflows:
         - 'actions/checkout@v7.0.1'
     '.github/workflows/update-baseline.yml':
         - 'actions/checkout@v6.1.0'
-        - 'actions/github-script@v7.1.0'
     '.github/workflows/vrt-check.yml':
         - 'actions/checkout@v6.1.0'
         - 'actions/upload-artifact@v4.6.2'
@@ -24,11 +23,6 @@ dependencies:
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
         owner_id: 44036562
         repo_id: 197814629
-    'actions/github-script@v7.1.0':
-        ref: 'v7.1.0'
-        commit: 'sha1-f28e40c7f34bde8b3046d885e986cb6290c5673b'
-        owner_id: 44036562
-        repo_id: 205262760
     'actions/upload-artifact@v4.6.2':
         ref: 'v4.6.2'
         commit: 'sha1-ea165f8d65b6e75b540449e92b4886f43607fa02'
