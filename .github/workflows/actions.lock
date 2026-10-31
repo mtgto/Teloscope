@@ -6,31 +6,26 @@ workflows:
     '.github/workflows/test.yml':
         - 'actions/checkout@v7.0.1'
     '.github/workflows/update-baseline.yml':
-        - 'actions/checkout@v6.1.0'
-        - 'actions/github-script@v7.1.0'
+        - 'actions/checkout@v7.0.1'
+        - 'actions/github-script@v9.0.0'
     '.github/workflows/vrt-check.yml':
-        - 'actions/checkout@v6.1.0'
-        - 'actions/upload-artifact@v4.6.2'
+        - 'actions/checkout@v7.0.1'
+        - 'actions/upload-artifact@v7.0.2'
     '.github/workflows/vrt-update-baselines.yml':
-        - 'actions/checkout@v6.1.0'
+        - 'actions/checkout@v7.0.1'
 dependencies:
-    'actions/checkout@v6.1.0':
-        ref: 'v6.1.0'
-        commit: 'sha1-d23441a48e516b6c34aea4fa41551a30e30af803'
-        owner_id: 44036562
-        repo_id: 197814629
     'actions/checkout@v7.0.1':
         ref: 'v7.0.1'
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
         owner_id: 44036562
         repo_id: 197814629
-    'actions/github-script@v7.1.0':
-        ref: 'v7.1.0'
-        commit: 'sha1-f28e40c7f34bde8b3046d885e986cb6290c5673b'
+    'actions/github-script@v9.0.0':
+        ref: 'v9.0.0'
+        commit: 'sha1-3a2844b7e9c422d3c10d287c895573f7108da1b3'
         owner_id: 44036562
         repo_id: 205262760
-    'actions/upload-artifact@v4.6.2':
-        ref: 'v4.6.2'
-        commit: 'sha1-ea165f8d65b6e75b540449e92b4886f43607fa02'
+    'actions/upload-artifact@v7.0.2':
+        ref: 'v7.0.2'
+        commit: 'sha1-cf430e030ddbb5b0abf93d22962f4752f3646cd9'
         owner_id: 44036562
         repo_id: 192625955
