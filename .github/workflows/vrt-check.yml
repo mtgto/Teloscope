@@ -26,7 +26,7 @@ jobs:
           rm -rf "TeloscopeTests/VRT/__Snapshots__"
         fi
 
-    - uses: ./.github/actions/generate-vrt-snapshots
+    - uses: $/.github/actions/generate-vrt-snapshots
 
     - name: Copy snapshots for comparison
       run: |
